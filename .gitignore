@@ -1,6 +1,6 @@
-checkpoints/*
+checkpoints/
 __pycache__
 .idea
 .vscode
 *.swp
-data/*
+data/
