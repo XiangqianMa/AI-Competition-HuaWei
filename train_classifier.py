@@ -92,12 +92,7 @@ class TrainVal():
             else:
                 is_best = False
             
-            state = {
-                'epoch': epoch,
-                'state_dict': self.model.module.state_dict(),
-                'max_accuracy_valid': self.max_accuracy_valid,
-            }
-
+            state = self.model.module.state_dict(),
             self.solver.save_checkpoint(os.path.join(self.model_path, '%s_classify_fold%d.pth' % (self.config.model_type, self.fold)), state, is_best)
             self.writer.add_scalar('valid_loss', val_loss, epoch)
             self.writer.add_scalar('valid_accuracy', val_accuracy, epoch)
@@ -162,7 +157,7 @@ class TrainVal():
 
 
 if __name__ == "__main__":
-    data_root = '/media/mxq/data/competition/HuaWei/train_data'
+    data_root = 'data/huawei_data/train_data'
     folds_split = 1
     test_size = 0.2
     mean = (0.485, 0.456, 0.406)

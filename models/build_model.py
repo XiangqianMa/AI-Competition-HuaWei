@@ -19,14 +19,9 @@ class PrepareModel:
         Args:
             model_type: 模型类型
             classes_num: 类别数目
-            droprate: dropout层的概率
-            stride: 用于ft_net的stride参数
-            model_path: 当模型类型为strong系列时，需要指定默认权重的路径
-            neck: 当模型类型为strong系列时，需要指定该参数
-            neck_feat: 当模型类型为strong系列时，需要指定该参数
-            pretrain_choice: 当模型类型为strong系列时，需要指定该参数
+            pretrained_path: 预训练权重路径
         """
-        print('*'*10 + 'Making Model.' + '*'*10)
+        print('Creating model: %s' %  model_type)
         if model_type == 'resnet50':
             model = ClassificationResnet(model_type, classes_num, 2, pretrained_path)
 
@@ -42,7 +37,7 @@ class PrepareModel:
         Return:
             optimizer: 优化器
         """
-        print('*'*10 + 'Making Optimizer.' + '*'*10)
+        print('Creating optimizer: %s' % config.optimizer)
         if config.optimizer == 'Adam':
             optimizer = optim.Adam(model.parameters(), config.lr, weight_decay=config.weight_decay)
             
@@ -52,12 +47,9 @@ class PrepareModel:
         """创建损失函数
         Args:
             criterion_type: 损失函数类型
-        Return:
-            criterion: 损失函数
         """
-        print('*'*10 + 'Making Criterion.' + '*'*10)
+        print('Creating criterion: %s' % config.criterion_type)
         if config.criterion_type == 'CrossEntropy':
-            print('Loss Type: %s.' % config.criterion_type)
             criterion = nn.CrossEntropyLoss()
 
         return criterion
@@ -77,7 +69,7 @@ class PrepareModel:
         Return:
             my_lr_scheduler: 学习率衰减器
         """
-        print('*'*10 + 'Making LR Scheduler.' + '*'*10)
+        print('Creating lr scheduler: %s' % lr_scheduler_type)
         if lr_scheduler_type == 'StepLR':
             if not step_size:
                 raise ValueError('You must specified step_size when you are using StepLR.')

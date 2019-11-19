@@ -10,6 +10,16 @@ import torchvision.transforms as T
 
 class TrainDataset(Dataset):
     def __init__(self, data_root, sample_list, label_list, size, mean, std, transforms=None):
+        """
+        Args:
+            data_root: 数据集根目录
+            sample_list: list, 样本名
+            label_list: list, 类标，与sample_list中的样本按照顺序对应
+            size: [height, width], 图片的目标大小
+            mean: 通道均值
+            std: 通道方差
+            transforms: 数据集转换方式
+        """
         super(TrainDataset, self).__init__()
         self.data_root = data_root
         self.sample_list = sample_list
@@ -89,13 +99,25 @@ class GetDataloader(object):
             if not test_size:
                 raise ValueError('You must specified test_size when folds_split equal to 1.')
     
-    def get_dataloader(self, batch_size, size, mean, std, transforms=None):
+    def get_dataloader(self, batch_size, image_size, mean, std, transforms=None):
+        """得到数据加载器
+
+        Args:
+            batch_size: 批量大小
+            image_size: 图片大小
+            mean: 通道均值
+            std: 通道方差
+            transforms: 数据增强方式
+        Return:
+            train_dataloader_folds: list, [train_dataloader_0, train_dataloader_1,...]
+            valid_dataloader_folds: list, [val_dataloader_0, val_dataloader_1, ...]
+        """
         train_lists, val_lists = self.get_split()
         train_dataloader_folds, valid_dataloader_folds = list(), list()
         
         for train_list, val_list in zip(train_lists, val_lists):
-            train_dataset = TrainDataset(self.data_root, train_list[0], train_list[1], size, transforms=transforms, mean=mean, std=std)
-            val_dataset = ValDataset(self.data_root, val_list[0], val_list[1], size, mean=mean, std=std)
+            train_dataset = TrainDataset(self.data_root, train_list[0], train_list[1], image_size, transforms=transforms, mean=mean, std=std)
+            val_dataset = ValDataset(self.data_root, val_list[0], val_list[1], image_size, mean=mean, std=std)
 
             train_dataloader = DataLoader(
                 train_dataset,
@@ -116,7 +138,7 @@ class GetDataloader(object):
         return train_dataloader_folds, valid_dataloader_folds
 
     def get_split(self):
-        """
+        """对数据集进行划分
         Return:
             train_list: [train_sample, train_label], train_sample: list, 样本名称， train_label: list, 样本类标
             val_list: [val_sample, val_label]， val_sample: list, 样本名称， val_label: list, 样本类标
@@ -129,6 +151,8 @@ class GetDataloader(object):
         return train_list, val_list
         
     def get_data_split_single(self):
+        """随机划分训练集和验证集
+        """
         samples_index = [i for i in range(len(self.samples))]
         train_index, val_index = train_test_split(samples_index, test_size=self.test_size, stratify=self.labels, random_state=69)
         train_samples = [self.samples[i] for i in train_index]
@@ -138,6 +162,8 @@ class GetDataloader(object):
         return [[train_samples, train_labels]], [[val_samples, val_labels]]
     
     def get_data_split_folds(self):
+        """交叉验证的数据划分
+        """
         skf = StratifiedKFold(n_splits=self.folds_split, shuffle=True, random_state=69)
         train_folds = []
         val_folds = []
