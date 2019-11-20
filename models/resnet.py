@@ -20,11 +20,9 @@ class ClassificationResnet(nn.Module):
 
         self.gap = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
-            nn.Linear(in_channel, 256),
+            nn.Linear(in_channel, 1024),
             nn.ReLU(),
-            nn.Linear(256, 256),
-            nn.ReLU(),
-            nn.Linear(256, classes_num)
+            nn.Linear(1024, classes_num)
         )
         self.resnet.load_param(pretrained_path)
 

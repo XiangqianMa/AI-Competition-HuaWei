@@ -55,10 +55,10 @@ class TrainVal():
         global_step = 0
         max_accuracy_valid = 0
         for epoch in range(self.config.epoch):
+            self.model.train()
+            
             epoch += 1
             epoch_loss = 0
-            self.model.train(True)
-
             tbar = tqdm.tqdm(train_loader)
             for i, (images, labels) in enumerate(tbar):
                 # 网络的前向传播与反向传播
