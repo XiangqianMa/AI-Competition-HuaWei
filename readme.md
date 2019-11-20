@@ -3,6 +3,7 @@
 * Torchvision 0.4.0
 * Python3.7
 * pretrainedmodels
+* Chinese font-simhei.ttf, [Download Link](https://fontzone.net/download/simhei). Put simhei in `progect_root/font`.
 
 ## How to run
 ### Clone Our Project

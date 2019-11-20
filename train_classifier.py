@@ -171,8 +171,7 @@ class TrainVal:
                 self.model_path,
                 save_result=save_result
             )
-            print('acc_for_each_class: {}, OA:{}, AA:{}, Kappa:{}'.format(acc_for_each_class.tolist(), oa,
-                                                                          average_accuracy, kappa))
+            print('OA:{}, AA:{}, Kappa:{}'.format(oa, average_accuracy, kappa))
 
             return oa, epoch_loss/len(tbar)
 
