@@ -10,6 +10,7 @@ from PIL import Image, ImageFont, ImageDraw
 from models.build_model import PrepareModel
 from config import get_classify_config
 
+
 class DemoResults(object):
     def __init__(self, model_type, classes_num, weight_path, image_size, label_json_path, mean=[], std=[]):
         self.model_type = model_type
