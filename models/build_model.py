@@ -11,14 +11,14 @@ class PrepareModel:
     def __init__(self):
         pass
 
-    def create_model(self, model_type, classes_num):
+    def create_model(self, model_type, classes_num, pretrained=True):
         """创建模型
         Args:
             model_type: 模型类型
             classes_num: 类别数目
         """
         print('Creating model: {}'.format(model_type))
-        model = CustomModel(model_type, classes_num)
+        model = CustomModel(model_type, classes_num, pretrained=pretrained)
         return model
 
     def create_optimizer(self, model_type, model, config):

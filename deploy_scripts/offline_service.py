@@ -6,14 +6,13 @@ import torch
 import torch.nn.functional as F
 import torchvision.models as models
 import torchvision.transforms as transforms
-from model_service.pytorch_model_service import PTServingBaseService
 
 import time
 import json
 from models.build_model import PrepareModel
 
 
-class ImageClassificationService(PTServingBaseService):
+class ImageClassificationService():
     def __init__(self, model_name, model_path, label_json_path='label_id_name.json'):
         """在服务器上进行前向推理，得到结果
         Args:
@@ -22,7 +21,7 @@ class ImageClassificationService(PTServingBaseService):
         self.model_name = model_name
         self.model_path = model_path
         self.classes_num = 54
-
+        
         self.use_cuda = False
         self.model, self.label_id_name_dict = self.__prepare__(label_json_path)
         self.model.eval()
@@ -30,7 +29,7 @@ class ImageClassificationService(PTServingBaseService):
         self.normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
-        )
+            )
 
         self.transforms = transforms.Compose([
             transforms.Resize(256),
@@ -69,13 +68,13 @@ class ImageClassificationService(PTServingBaseService):
 
         data['latency_time'] = pre_time_in_ms + infer_in_ms + post_time_in_ms
         return data
-
+    
     def __prepare__(self, label_json_path):
         """准备模型，得到id到真实类别的映射
         """
         prepare_model = PrepareModel()
         model = prepare_model.create_model('resnet50', self.classes_num, pretrained=False)
-
+        
         if torch.cuda.is_available():
             print('Using GPU for inference')
             self.use_cuda = True
@@ -91,7 +90,7 @@ class ImageClassificationService(PTServingBaseService):
             label_dict = json.load(f)
 
         return model, label_dict
-
+    
     def _inference(self, data):
         """实际推理请求方法
         """
@@ -110,7 +109,7 @@ class ImageClassificationService(PTServingBaseService):
                 result = {'result': 'predict score is None'}
 
         return result
-
+    
     def _preprocess(self, data):
         """预处理方法，在推理请求前调用，用于将API接口用户原始请求数据转换为模型期望输入数据
         """
@@ -121,8 +120,20 @@ class ImageClassificationService(PTServingBaseService):
                 img = self.transforms(img)
                 preprocessed_data[k] = img
         return preprocessed_data
-
+    
     def _postprocess(self, data):
         """后处理方法，在推理请求完成后调用，用于将模型输出转换为API接口输出
         """
         return data
+
+
+if __name__ == "__main__":
+    image_path = '/media/mxq/data/competition/HuaWei/train_data/img_1.jpg'
+    data = {}
+    data['input_image'] = image_path
+    meta_data = {}
+    meta_data['input_img'] = data
+    classification_service = ImageClassificationService('server', 'model_best.pth')
+    result = classification_service.inference(meta_data)
+    print(result)
+    pass
