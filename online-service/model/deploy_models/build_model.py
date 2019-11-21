@@ -1,7 +1,7 @@
 import torch.optim as optim
 from torch import nn
 from torch.optim import lr_scheduler
-from models.custom_model import CustomModel
+from model.deploy_models.custom_model import CustomModel
 
 
 class PrepareModel:

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import pretrainedmodels
+from model import pretrainedmodels
 from torchvision import models
 import torch.nn.functional as F
 
@@ -47,7 +47,7 @@ class CustomModel(nn.Module):
                 pretrained_type = 'imagenet'
             else:
                 pretrained_type = None            
-            model = getattr(pretrainedmodels, self.model_name)(pretrained='imagenet')
+            model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
             model.avg_pool = torch.nn.AdaptiveAvgPool2d(output_size=(1, 1))
             in_features = model.last_linear.in_features
             self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
