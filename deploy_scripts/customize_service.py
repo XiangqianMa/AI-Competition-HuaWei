@@ -14,11 +14,12 @@ from models.build_model import PrepareModel
 
 
 class ImageClassificationService(PTServingBaseService):
-    def __init__(self, model_name, model_path, label_json_path=None):
+    def __init__(self, model_name, model_path, label_json_path='label_id_name.json'):
         """在服务器上进行前向推理，得到结果
         Args:
 
         """
+        super(ImageClassificationService, self).__init__(model_name, model_path)
         self.model_name = model_name
         self.model_path = model_path
         self.classes_num = 54
@@ -74,7 +75,7 @@ class ImageClassificationService(PTServingBaseService):
         """准备模型，得到id到真实类别的映射
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model(self.model_name, self.classes_num)
+        model = prepare_model.create_model('resnet50', self.classes_num, pretrained=False)
         
         if torch.cuda.is_available():
             print('Using GPU for inference')
@@ -93,6 +94,8 @@ class ImageClassificationService(PTServingBaseService):
         return model, label_dict
     
     def _inference(self, data):
+        """实际推理请求方法
+        """
         # 对单张样本得到预测结果
         img = data["input_img"]
         img = img.unsqueeze(0)
@@ -110,6 +113,8 @@ class ImageClassificationService(PTServingBaseService):
         return result
     
     def _preprocess(self, data):
+        """预处理方法，在推理请求前调用，用于将API接口用户原始请求数据转换为模型期望输入数据
+        """
         preprocessed_data = {}
         for k, v in data.items():
             for _, file_content in v.items():
@@ -119,5 +124,7 @@ class ImageClassificationService(PTServingBaseService):
         return preprocessed_data
     
     def _postprocess(self, data):
+        """后处理方法，在推理请求完成后调用，用于将模型输出转换为API接口输出
+        """
         return data
     
