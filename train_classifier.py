@@ -45,7 +45,7 @@ class TrainVal:
             config.lr_scheduler,
             self.optimizer,
             step_size=config.lr_step_size,
-            restart_step=config.epoch,
+            restart_step=config.restart_step,
         )
 
         # 加载损失函数
@@ -192,15 +192,19 @@ class TrainVal:
 
 
 if __name__ == "__main__":
-    data_root = 'data/huawei_data/train_data'
-    folds_split = 1
-    test_size = 0.2
+    config = get_classify_config()
+    data_root = config.dataset_root
+    folds_split = config.n_splits
+    test_size = config.val_size
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
-    config = get_classify_config()
-    get_dataloader = GetDataloader(data_root, folds_split=1, test_size=test_size)
+    if config.augmentation_flag:
+        raise ValueError('You must specified transofrm when augmentation_flag is True')
+    else:
+        transforms = None
+    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size)
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
-                                                                       transforms=None)
+                                                                       transforms=transforms)
 
     for fold_index, [train_loader, valid_loader] in enumerate(zip(train_dataloaders, val_dataloaders)):
         train_val = TrainVal(config, fold_index)

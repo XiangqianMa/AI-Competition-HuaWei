@@ -70,17 +70,17 @@ class DemoResults(object):
         font = ImageFont.truetype(fontpath, 16)
         draw = ImageDraw.Draw(original_image)
         txt = '真实类标： ' + label
-        draw.text((50, 50), txt, font=font, fill = (0, 0, 255))
+        draw.text((50, 50), txt, font=font, fill=(0, 0, 255))
         txt = '预测类标： ' + predict_label
-        draw.text((50, 100), txt, font=font, fill = (0, 255, 0))
+        draw.text((50, 100), txt, font=font, fill=(0, 255, 0))
         if save:
             image_save_path = os.path.join(save_path, sample_path.split('/')[-1])
             plt.imsave(image_save_path, original_image)
         if show:
             plt.imshow(original_image)
             plt.show()
-            mng = plt.get_current_fig_manager()
-            mng.window.showMaximized()
+            # mng = plt.get_current_fig_manager()
+            # mng.window.showMaximized()
         
         return indexs, label_index, label, predict_label
 
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     samples_root = 'data/demo_data/images'
     save_path = 'data/demo_data/results'
     rank = 1
-    show = True
+    show = False
     save = True
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
