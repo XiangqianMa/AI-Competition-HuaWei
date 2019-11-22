@@ -100,13 +100,13 @@ class DemoResults(object):
 
 if __name__ == "__main__":
     config = get_classify_config()
-    weight_path = 'checkpoints/resnet50/log-2019-11-20T14-44-38/resnet50_fold0_best.pth'
+    weight_path = 'checkpoints/resnet50/log-2019-11-22T00-09-25/resnet50_fold0_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
     samples_root = 'data/demo_data/images'
     save_path = 'data/demo_data/results'
     rank = 1
-    show = False
-    save = True
+    show = True
+    save = False
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     demo_predicts = DemoResults(config.model_type, config.num_classes, weight_path, config.image_size, label_json_path, mean=mean, std=std)

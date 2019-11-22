@@ -7,16 +7,15 @@ import torch
 import torch.nn.functional as F
 import torchvision.models as models
 import torchvision.transforms as transforms
-from model_service.pytorch_model_service import PTServingBaseService
 import time
-from metric.metrics_manager import MetricsManager
-import log
-logger = log.getLogger(__name__)
+import logging
+logger = logging.getLogger(__name__)
+logger.info('from model.deploy_models.build_model import PrepareModel')
 
 from model.deploy_models.build_model import PrepareModel
 
 
-class ImageClassificationService(PTServingBaseService):
+class ImageClassificationService():
     def __init__(self, model_name, model_path):
         """在服务器上进行前向推理，得到结果
         Args:
@@ -87,7 +86,9 @@ class ImageClassificationService(PTServingBaseService):
             }        
         
         self.model = self.__prepare()
+        print(self.model)
         self.model.eval()
+
         self.normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
@@ -122,9 +123,6 @@ class ImageClassificationService(PTServingBaseService):
         pre_time_in_ms = (infer_start_time - pre_start_time) * 1000
         logger.info('preprocess time: ' + str(pre_time_in_ms) + 'ms')
 
-        if self.model_name + '_LatencyPreprocess' in MetricsManager.metrics:
-            MetricsManager.metrics[self.model_name + '_LatencyPreprocess'].update(pre_time_in_ms)
-
         data = self._inference(data)
         infer_end_time = time.time()
         infer_in_ms = (infer_end_time - infer_start_time) * 1000
@@ -135,12 +133,6 @@ class ImageClassificationService(PTServingBaseService):
         # Update inference latency metric
         post_time_in_ms = (time.time() - infer_end_time) * 1000
         logger.info('postprocess time: ' + str(post_time_in_ms) + 'ms')
-        if self.model_name + '_LatencyInference' in MetricsManager.metrics:
-            MetricsManager.metrics[self.model_name + '_LatencyInference'].update(post_time_in_ms)
-
-        # Update overall latency metric
-        if self.model_name + '_LatencyOverall' in MetricsManager.metrics:
-            MetricsManager.metrics[self.model_name + '_LatencyOverall'].update(pre_time_in_ms + post_time_in_ms)
 
         logger.info('latency: ' + str(pre_time_in_ms + infer_in_ms + post_time_in_ms) + 'ms')
         data['latency_time'] = pre_time_in_ms + infer_in_ms + post_time_in_ms
@@ -154,8 +146,10 @@ class ImageClassificationService(PTServingBaseService):
         # 对单张样本得到预测结果
         img = data["input_img"]
         img = img.unsqueeze(0)
+        print(img.size())
         if self.use_cuda:
             img = img.cuda()
+        print(img.device)
         with torch.no_grad():
             pred_score = self.model(img)
             pred_score = F.softmax(pred_score.data, dim=1)
@@ -173,16 +167,9 @@ class ImageClassificationService(PTServingBaseService):
         prepare_model = PrepareModel()
         model = prepare_model.create_model('resnet50', self.classes_num, pretrained=False)
 
-        if torch.cuda.is_available():
-            logger.info('Using GPU for inference')
-            self.use_cuda = True
-            checkpoint = torch.load(self.model_path)
-            model.load_state_dict(checkpoint['state_dict'])
-            model = torch.nn.DataParallel(model).cuda()
-        else:
-            logger.info('Using CPU for inference')
-            checkpoint = torch.load(self.model_path, map_location='cpu')
-            model.load_state_dict(checkpoint['state_dict'])
+        print('Using CPU for inference')
+        checkpoint = torch.load(self.model_path, map_location='cpu')
+        model.load_state_dict(checkpoint['state_dict'])
 
         return model
 
@@ -201,3 +188,12 @@ class ImageClassificationService(PTServingBaseService):
         """后处理方法，在推理请求完成后调用，用于将模型输出转换为API接口输出
         """
         return data
+
+
+if __name__ == "__main__":
+    data = {}
+    data['input_img'] = {'1': '/media/mxq/project/Projects/competition/HuaWei/HuaWei-Classification/data/demo_data/images/img_594.jpg'}
+    model_path = 'model/model_best.pth'
+    image_classify_service = ImageClassificationService('renet50', model_path)
+    result = image_classify_service.inference(data)
+    print(result)
