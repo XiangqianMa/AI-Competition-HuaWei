@@ -100,7 +100,7 @@ class DemoResults(object):
 
 if __name__ == "__main__":
     config = get_classify_config()
-    weight_path = 'checkpoints/resnet50/log-2019-11-22T00-09-25/resnet50_fold0_best.pth'
+    weight_path = 'checkpoints/resnet50/log-2019-11-22T14-07-32/resnet50_fold0_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
     samples_root = 'data/demo_data/images'
     save_path = 'data/demo_data/results'
