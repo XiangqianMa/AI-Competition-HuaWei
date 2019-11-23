@@ -4,11 +4,10 @@ import codecs
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.font_manager import FontProperties
 from sklearn.metrics import confusion_matrix, cohen_kappa_score, accuracy_score, precision_score, classification_report
 import warnings
 
-mpl.rcParams[u'font.sans-serif'] = ['simhei']
-mpl.rcParams['axes.unicode_minus'] = False
 warnings.filterwarnings('ignore')
 
 
@@ -107,8 +106,9 @@ class ClassificationMetric:
         plt.title('Confusion Matrix')
         plt.colorbar()
         xlocations = np.array(range(len(self.labels)))
-        plt.xticks(xlocations, self.labels, rotation=90)
-        plt.yticks(xlocations, self.labels, rotation=0)
+        font = FontProperties(fname=r"font/simhei.ttf", size=7)
+        plt.xticks(xlocations, self.labels, fontproperties=font, rotation=90)
+        plt.yticks(xlocations, self.labels, fontproperties=font, rotation=0)
         plt.ylabel('Index of True Classes')
         plt.xlabel('Index of Predict Classes')
 
