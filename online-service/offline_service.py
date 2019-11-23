@@ -95,7 +95,7 @@ class ImageClassificationService():
         )
 
         self.transforms = transforms.Compose([
-            transforms.Resize([512, 512]),
+            transforms.Resize([256, 256]),
             transforms.ToTensor(),
             self.normalize
         ])

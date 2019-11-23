@@ -59,7 +59,10 @@
                 },              
                 {
                     "package_name": "tqdm"
-                }                
+                },
+                {
+                    "package_name": "pretrainedmodels"
+                }                  
             ]
         }
     ]
