@@ -27,7 +27,7 @@ class DownloadImages(object):
         pic_url = re.findall('"objURL":"(.*?)",', html, re.S)
         i = 1
         print('找到关键词:' + keyword + '的图片，现在开始下载图片...')
-        pic_url_selected = random.sample(pic_url, min(len(pic_url), number))
+        pic_url_selected = random.sample(pic_url, min(len(pic_url), number+10))
         for each in pic_url_selected:
             print('正在下载第' + str(i) + '张图片，图片地址:' + str(each))
             try:
@@ -59,9 +59,9 @@ if __name__ == '__main__':
     label_id_json = 'data/huawei_data/label_id_name.json'
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
     name_to_download_number = dataset_statistic.get_download_number()    
-    words = name_to_download_number.keys()
-    numbers = name_to_download_number.values()
-    save_path = '/media/mxq/data/competition/HuaWei/download_images'
+    words = ['酥饺']
+    numbers = [100]
+    save_path = '/media/mxq/data/competition/HuaWei/酥饺'
     url = 'http://image.baidu.com/search/flip?tn=baiduimage&ie=utf-8&word=' + '%s' + '&ct=201326592&v=flip'
     downlaod_pic = DownloadImages(url, words, numbers, save_path)
     downlaod_pic.download_pics()

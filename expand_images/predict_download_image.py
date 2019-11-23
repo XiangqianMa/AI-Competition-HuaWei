@@ -28,6 +28,14 @@ class PredictDownloadImage(object):
         images_name = [sample + '.jpg' for sample in samples_list]
         predict_results = []
         tbar = tqdm.tqdm(images_name)
+        if not os.path.exists(save_path):
+            print('Making %s' % save_path)
+            os.mkdir(save_path)
+        else:
+            print('Removing %s' % save_path)
+            shutil.rmtree(save_path)
+            print('Making %s' % save_path)
+            os.mkdir(save_path)
         for image_name in tbar:
             image_path = os.path.join(samples_root, image_name)
             index, predict_label, remain = self.predict_single_sample(image_path, thresh=thresh)
@@ -109,9 +117,9 @@ if __name__ == "__main__":
     config = get_classify_config()
     weight_path = 'checkpoints/resnet50/0.93/model_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
-    samples_root = '/media/mxq/data/competition/HuaWei/download_images'
-    save_path = '/media/mxq/data/competition/HuaWei/cleaned_dowload_images'
-    thresh = 0.6
+    samples_root = '/media/mxq/data/competition/HuaWei/酥饺'
+    save_path = '/media/mxq/data/competition/HuaWei/cleaned_酥饺'
+    thresh = 0.75
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     predict_download_images = PredictDownloadImage(config.model_type, config.num_classes, weight_path, config.image_size, label_json_path, mean=mean, std=std)
