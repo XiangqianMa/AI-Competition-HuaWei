@@ -16,7 +16,7 @@ from utils.set_seed import seed_torch
 from models.build_model import PrepareModel
 from datasets.create_dataset import GetDataloader
 from losses.get_loss import Loss
-from utils.draw_confusion_matrix import plot_confusion_matrix
+from utils.classification_metric import ClassificationMetric
 from datasets.data_augmentation import DataAugmentation
 
 
@@ -59,6 +59,13 @@ class TrainVal:
         # log初始化
         self.writer, self.time_stamp = self.init_log()
         self.model_path = os.path.join(self.config.save_path, self.config.model_type, self.time_stamp)
+
+        # 初始化分类度量准则类
+        with open("online-service/model/label_id_name.json", 'r', encoding='utf-8') as json_file:
+            self.class_names = list(json.load(json_file).values())
+        self.classification_metric = ClassificationMetric(self.class_names, self.model_path)
+
+        self.max_accuracy_valid = 0
 
     def train(self, train_loader, valid_loader):
         """ 完成模型的训练，保存模型与日志
@@ -113,13 +120,7 @@ class TrainVal:
             print('[Finish epoch: {}/{}][Average Acc: {:.4}]'.format(epoch, self.epoch, epoch_acc) + descript)
 
             # 验证模型
-            val_accuracy, val_loss = self.validation(valid_loader, epoch)
-
-            if val_accuracy > max_accuracy_valid:
-                is_best = True
-                max_accuracy_valid = val_accuracy
-            else:
-                is_best = False
+            val_accuracy, val_loss, is_best = self.validation(valid_loader)
 
             state = {
                 'epoch': epoch,
@@ -137,12 +138,7 @@ class TrainVal:
             self.writer.add_scalar('ValidLoss', val_loss, epoch)
             self.writer.add_scalar('ValidAccuracy', val_accuracy, epoch)
 
-    def validation(self, valid_loader, epoch):
-        if epoch == self.epoch:  # TODO 只保留最后一个epoch的混淆矩阵图
-            save_result = True
-        else:
-            save_result = False
-
+    def validation(self, valid_loader):
         tbar = tqdm.tqdm(valid_loader)
         self.model.eval()
         labels_predict_all, labels_all = np.empty(shape=(0, )), np.empty(shape=(0, ))
@@ -165,16 +161,29 @@ class TrainVal:
                 descript = '[Valid][Loss: {:.4f}]'.format(loss)
                 tbar.set_description(desc=descript)
 
-            acc_for_each_class, oa, average_accuracy, kappa = plot_confusion_matrix(
-                labels_all,
-                labels_predict_all,
-                list(range(self.num_classes)),
-                self.model_path,
-                save_result=save_result
-            )
+            classify_report, my_confusion_matrix, acc_for_each_class, oa, average_accuracy, kappa = \
+                self.classification_metric.get_metric(
+                    labels_all,
+                    labels_predict_all
+                )
+
+            if oa > self.max_accuracy_valid:
+                is_best = True
+                self.max_accuracy_valid = oa
+                self.classification_metric.draw_cm_and_save_result(
+                    classify_report,
+                    my_confusion_matrix,
+                    acc_for_each_class,
+                    oa,
+                    average_accuracy,
+                    kappa
+                )
+            else:
+                is_best = False
+
             print('OA:{}, AA:{}, Kappa:{}'.format(oa, average_accuracy, kappa))
 
-            return oa, epoch_loss/len(tbar)
+            return oa, epoch_loss/len(tbar), is_best
 
     def init_log(self):
         # 保存配置信息和初始化tensorboard
