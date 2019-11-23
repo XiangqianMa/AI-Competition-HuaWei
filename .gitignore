@@ -6,3 +6,5 @@ __pycache__
 font/
 data/
 *.pth
+online-service/obsutil
+online-service/setup.sh

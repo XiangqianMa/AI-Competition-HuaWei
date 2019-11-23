@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from model import pretrainedmodels
+import pretrainedmodels
 from torchvision import models
 import torch.nn.functional as F
 
