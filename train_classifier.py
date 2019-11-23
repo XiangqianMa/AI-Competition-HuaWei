@@ -14,9 +14,10 @@ from config import get_classify_config
 from solver import Solver
 from utils.set_seed import seed_torch
 from models.build_model import PrepareModel
-from datasets.datasets import GetDataloader
+from datasets.create_dataset import GetDataloader
 from losses.get_loss import Loss
 from utils.draw_confusion_matrix import plot_confusion_matrix
+from datasets.data_augmentation import DataAugmentation
 
 
 class TrainVal:
@@ -199,7 +200,7 @@ if __name__ == "__main__":
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     if config.augmentation_flag:
-        raise ValueError('You must specified transofrm when augmentation_flag is True')
+        transforms = DataAugmentation(config.erase_prob, full_aug=True, gray_prob=config.gray_prob)
     else:
         transforms = None
     get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size)

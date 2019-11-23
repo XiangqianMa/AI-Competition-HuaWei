@@ -5,12 +5,16 @@ from argparse import Namespace
 
 def get_classify_config():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--image_size', type=tuple, default=[512, 512], help='image size')
-    parser.add_argument('--batch_size', type=int, default=64, help='batch size')
+    parser.add_argument('--image_size', type=tuple, default=[256, 256], help='image size')
+    parser.add_argument('--batch_size', type=int, default=32, help='batch size')
     parser.add_argument('--epoch', type=int, default=80, help='epoch')
 
-    parser.add_argument('--augmentation_flag', type=bool, default=False,
+    parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')
+    parser.add_argument('--erase_prob', type=float, default=0.0,
+                        help='probability of random erase when augmentation_flag is True')
+    parser.add_argument('--gray_prob', type=float, default=0.0,
+                        help='probability of gray when augmentation_flag is True')                                                 
     parser.add_argument('--n_splits', type=int, default=1, help='n_splits_fold')
     parser.add_argument('--val_size', type=float, default=0.2, help='the ratio of val data when n_splits=1.')
     # model set 
