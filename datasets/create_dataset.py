@@ -1,8 +1,10 @@
 import torch
 import os
+import json
 import numpy as np
 from PIL import Image
 import matplotlib.pylab as plt
+from matplotlib.font_manager import FontProperties
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as T
@@ -83,7 +85,7 @@ class ValDataset(Dataset):
 
 
 class GetDataloader(object):
-    def __init__(self, data_root, folds_split=1, test_size=None):
+    def __init__(self, data_root, folds_split=1, test_size=None, label_names_path='data/huawei_data/label_id_name.json'):
         """
         Args:
             data_root: 数据集根目录
@@ -94,6 +96,8 @@ class GetDataloader(object):
         self.folds_split = folds_split
         self.samples, self.labels = self.get_samples_labels()
         self.test_size = test_size
+        with open(label_names_path, 'r') as f:
+            self.label_to_name = json.load(f)
 
         if folds_split == 1:
             if not test_size:
@@ -114,7 +118,8 @@ class GetDataloader(object):
         """
         train_lists, val_lists = self.get_split()
         train_dataloader_folds, valid_dataloader_folds = list(), list()
-        
+        self.draw_train_val_distribution(train_lists, val_lists)
+
         for train_list, val_list in zip(train_lists, val_lists):
             train_dataset = TrainDataset(self.data_root, train_list[0], train_list[1], image_size, transforms=transforms, mean=mean, std=std)
             val_dataset = ValDataset(self.data_root, val_list[0], val_list[1], image_size, mean=mean, std=std)
@@ -137,6 +142,44 @@ class GetDataloader(object):
             valid_dataloader_folds.append(val_dataloader)
         return train_dataloader_folds, valid_dataloader_folds
 
+    def draw_train_val_distribution(self, train_lists, val_lists):
+        for index, (train_list, val_list) in enumerate(zip(train_lists, val_lists)):
+            train_labels_number = {}
+            for label in train_list[1]:
+                if label in train_labels_number.keys():
+                    train_labels_number[label] += 1
+                else:
+                    train_labels_number[label] = 1
+            self.draw_labels_number(train_labels_number, phase='Train_%s' % index)
+            val_labels_number = {}
+            for label in val_list[1]:
+                if label in val_labels_number.keys():
+                    val_labels_number[label] += 1
+                else:
+                    val_labels_number[label] = 1
+            self.draw_labels_number(val_labels_number, phase='Val_%s' % index)
+
+    def draw_labels_number(self, labels_number, phase='Train'):
+        labels = labels_number.keys()
+        number = labels_number.values()
+        name = [self.label_to_name[str(label)] for label in labels]
+        
+        plt.figure(figsize=(20, 16), dpi=240)
+        font = FontProperties(fname=r"font/simhei.ttf", size=7)
+        ax1 = plt.subplot(111)
+        x_axis = range(len(labels))
+        rects = ax1.bar(x=x_axis, height=number, width=0.8, label='Label Number')
+        plt.ylabel('Number')
+        plt.xticks([index + 0.13 for index in x_axis], name, fontproperties=font, rotation=270)
+        plt.xlabel('Labels')
+        plt.title('%s: Sample Number of Each Label' % phase)
+        plt.legend()
+
+        for rect in rects:
+            height = rect.get_height()
+            plt.text(rect.get_x() + rect.get_width() / 2, height+1, str(height), ha="center", va="bottom")
+        plt.savefig('%s.jpg' % phase, dpi=240)
+        
     def get_split(self):
         """对数据集进行划分
         Return:

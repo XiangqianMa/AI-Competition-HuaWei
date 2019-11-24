@@ -6,5 +6,7 @@ __pycache__
 font/
 data/
 *.pth
+Train*.jpg
+Val*.jpg
 online-service/obsutil
 online-service/setup.sh
