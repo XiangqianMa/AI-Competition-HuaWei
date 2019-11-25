@@ -34,6 +34,8 @@ class PrepareModel:
         print('Creating optimizer: %s' % config.optimizer)
         if config.optimizer == 'Adam':
             optimizer = optim.Adam(model.parameters(), config.lr, weight_decay=config.weight_decay)
+        elif config.optimizer == 'SGD':
+            optimizer = optim.SGD(model.parameters(), config.lr, weight_decay=config.weight_decay, momentum=0.9)
 
         return optimizer
 

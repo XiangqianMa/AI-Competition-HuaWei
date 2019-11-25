@@ -122,23 +122,7 @@ class DataAugmentation(object):
         augmentations = Compose([
             HorizontalFlip(p=0.5),
             VerticalFlip(p=0.25),
-            ShiftScaleRotate(shift_limit=0.07, rotate_limit=0, p=0.4),
-
-            # 亮度、对比度
-            RandomGamma(gamma_limit=(60, 85), p=0.1),
-            RandomBrightnessContrast(p=0.1),
-            
-            # 模糊
-            OneOf([
-                    MotionBlur(p=0.1),
-                    MedianBlur(blur_limit=3, p=0.1),
-                    Blur(blur_limit=3, p=0.1),
-                ], p=0.3),
-            
-            OneOf([
-                    IAAAdditiveGaussianNoise(),
-                    GaussNoise(),
-                ], p=0.2)
+            ShiftScaleRotate(shift_limit=0.07, rotate_limit=10, p=0.4),
         ])
         
         augmented = augmentations(image=original_image)
@@ -150,7 +134,7 @@ class DataAugmentation(object):
 if __name__ == "__main__":
     image_path = 'data/huawei_data/train_data'
     # augment = DataAugmentation(erase_flag=True, full_aug=True, gray=True)
-    augment = DataAugmentation(erase_prob=1.0, gray_prob=0)
+    augment = DataAugmentation(erase_prob=1.0, gray_prob=1.0)
     images_name = [f for f in os.listdir(image_path) if f.endswith('jpg')]
     for image_name in images_name:
         plt.figure()

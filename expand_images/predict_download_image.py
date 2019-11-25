@@ -115,11 +115,11 @@ class PredictDownloadImage(object):
 
 if __name__ == "__main__":
     config = get_classify_config()
-    weight_path = 'checkpoints/resnet50/0.93/model_best.pth'
+    weight_path = 'checkpoints/resnet50/log-2019-11-23T20-33-13-加入新数据-0.9360/model_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
-    samples_root = '/media/mxq/data/competition/HuaWei/酥饺'
-    save_path = '/media/mxq/data/competition/HuaWei/cleaned_酥饺'
-    thresh = 0.75
+    samples_root = '/media/mxq/data/competition/HuaWei/download_image'
+    save_path = '/media/mxq/data/competition/HuaWei/psudeo_image'
+    thresh = 0.8
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     predict_download_images = PredictDownloadImage(config.model_type, config.num_classes, weight_path, config.image_size, label_json_path, mean=mean, std=std)
