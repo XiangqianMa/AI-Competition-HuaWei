@@ -1,4 +1,5 @@
 bucket_name=ai-competition-$USER
+filename=`ls -l | tail -n 1 | awk '{print $9}'`
 
 if [ $1 -eq 0 ]; then
     # 创建新的bucket

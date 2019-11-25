@@ -15,7 +15,7 @@ logger.info('from model.deploy_models.build_model import PrepareModel')
 from model.deploy_models.build_model import PrepareModel
 
 
-class ImageClassificationService():
+class ImageClassificationService:
     def __init__(self, model_name, model_path):
         """在服务器上进行前向推理，得到结果
         Args:
@@ -165,7 +165,7 @@ class ImageClassificationService():
         """准备模型
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model('resnet50', self.classes_num, pretrained=False)
+        model = prepare_model.create_model('resnet50', self.classes_num, last_stride=1, pretrained=False)
 
         print('Using CPU for inference')
         checkpoint = torch.load(self.model_path, map_location='cpu')
@@ -192,8 +192,8 @@ class ImageClassificationService():
 
 if __name__ == "__main__":
     data = {}
-    data['input_img'] = {'1': '/media/mxq/project/Projects/competition/HuaWei/HuaWei-Classification/data/demo_data/images/img_594.jpg'}
+    data['input_img'] = {'1': '../data/huawei_data/train_data/img_1.jpg'}
     model_path = 'model/model_best.pth'
-    image_classify_service = ImageClassificationService('renet50', model_path)
+    image_classify_service = ImageClassificationService('resnet50', model_path)
     result = image_classify_service.inference(data)
     print(result)

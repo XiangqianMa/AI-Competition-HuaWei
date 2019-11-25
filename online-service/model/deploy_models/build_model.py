@@ -11,14 +11,15 @@ class PrepareModel:
     def __init__(self):
         pass
 
-    def create_model(self, model_type, classes_num, pretrained=True):
+    def create_model(self, model_type, classes_num, last_stride, pretrained=True):
         """创建模型
         Args:
             model_type: 模型类型
+            last_stride: resnet最后一个下采样层的步长；类型为int
             classes_num: 类别数目
         """
         print('Creating model: {}'.format(model_type))
-        model = CustomModel(model_type, classes_num, pretrained=pretrained)
+        model = CustomModel(model_type, classes_num, last_stride, pretrained=pretrained)
         return model
 
     def create_optimizer(self, model_type, model, config):
@@ -34,6 +35,8 @@ class PrepareModel:
         print('Creating optimizer: %s' % config.optimizer)
         if config.optimizer == 'Adam':
             optimizer = optim.Adam(model.parameters(), config.lr, weight_decay=config.weight_decay)
+        elif config.optimizer == 'SGD':
+            optimizer = optim.SGD(model.parameters(), config.lr, weight_decay=config.weight_decay, momentum=0.9)
 
         return optimizer
 

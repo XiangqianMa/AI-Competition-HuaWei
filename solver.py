@@ -72,7 +72,7 @@ class Solver:
         torch.save(state, save_path)
         if is_best:
             print('Saving Best Model.')
-            save_best_path = save_path.replace('.pth', '_best.pth')
+            save_best_path = '/'.join(save_path.split('/')[:-1] + ['model_best.pth'])
             shutil.copyfile(save_path, save_best_path)
     
     def load_checkpoint(self, load_path):

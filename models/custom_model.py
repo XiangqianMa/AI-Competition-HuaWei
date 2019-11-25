@@ -6,19 +6,26 @@ import torch.nn.functional as F
 
 
 class CustomModel(nn.Module):
-    def __init__(self, model_name, num_classes, pretrained=True):
+    def __init__(self, model_name, num_classes, last_stride=2, pretrained=True):
         """
 
         Args:
             model_name: model_name: resnet模型的名称；类型为str
+            last_stride: resnet最后一个下采样层的步长；类型为int
             num_classes: num_classes: 类别数目；类型为int
         """
         super(CustomModel, self).__init__()
         self.model_name = model_name
         self.num_classes = num_classes
+        self.last_stride = last_stride
 
         if self.model_name.startswith('resnet'):
             model = getattr(models, self.model_name)(pretrained=pretrained)
+            if self.model_name == 'resnet18' or self.model_name == 'resnet34':
+                model.layer4[0].conv1.stride = (self.last_stride, self.last_stride)
+            else:
+                model.layer4[0].conv2.stride = (self.last_stride, self.last_stride)
+            model.layer4[0].downsample[0].stride = (self.last_stride, self.last_stride)
             in_features = model.fc.in_features
             self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
 

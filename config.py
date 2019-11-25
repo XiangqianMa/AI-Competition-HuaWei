@@ -6,8 +6,8 @@ from argparse import Namespace
 def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[256, 256], help='image size')
-    parser.add_argument('--batch_size', type=int, default=24, help='batch size')
-    parser.add_argument('--epoch', type=int, default=60, help='epoch')
+    parser.add_argument('--batch_size', type=int, default=64, help='batch size')
+    parser.add_argument('--epoch', type=int, default=80, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')
@@ -19,7 +19,8 @@ def get_classify_config():
     parser.add_argument('--val_size', type=float, default=0.2, help='the ratio of val data when n_splits=1.')
     # model set 
     parser.add_argument('--model_type', type=str, default='resnet50', help='resnet50')
-    
+    parser.add_argument('--last_stride', type=int, default=2, help='last stride in the resnet model')
+
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
     parser.add_argument('--lr', type=float, default=1e-2, help='init lr')

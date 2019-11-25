@@ -171,7 +171,7 @@ class ImageClassificationService(PTServingBaseService):
         """准备模型
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model('resnet50', self.classes_num, pretrained=False)
+        model = prepare_model.create_model('resnet50', self.classes_num, last_stride=1, pretrained=False)
 
         if torch.cuda.is_available():
             logger.info('Using GPU for inference')

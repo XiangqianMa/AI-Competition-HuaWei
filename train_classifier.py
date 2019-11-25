@@ -32,7 +32,8 @@ class TrainVal:
         prepare_model = PrepareModel()
         self.model = prepare_model.create_model(
             model_type=config.model_type,
-            classes_num=self.num_classes
+            classes_num=self.num_classes,
+            last_stride=config.last_stride
         )
         if torch.cuda.is_available():
             self.model = torch.nn.DataParallel(self.model)
