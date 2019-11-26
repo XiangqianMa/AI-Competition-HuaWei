@@ -6,12 +6,12 @@ import torch.nn.functional as F
 
 
 class CustomModel(nn.Module):
-    def __init__(self, model_name, num_classes, last_stride=2, pretrained=True):
+    def __init__(self, model_name, num_classes, last_stride=2, droprate=0, pretrained=True):
         """
-
         Args:
             model_name: model_name: resnet模型的名称；类型为str
-            last_stride: resnet最后一个下采样层的步长；类型为int
+            last_stride: resnet模型最后一个下采样层的步长；类型为int
+            droprate: float, drop rate
             num_classes: num_classes: 类别数目；类型为int
         """
         super(CustomModel, self).__init__()
@@ -59,11 +59,11 @@ class CustomModel(nn.Module):
             in_features = model.last_linear.in_features
             self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
 
-        self.classifier = nn.Sequential(
-            nn.Linear(in_features, 1024),
-            nn.ReLU(),
-            nn.Linear(1024, self.num_classes)
-        )
+        add_block = [nn.Linear(in_features, 1024), nn.ReLU()]
+        if droprate > 0:
+            add_block += [nn.Dropout(p=droprate)]
+        add_block += [nn.Linear(1024, self.num_classes)]
+        self.classifier = nn.Sequential(*add_block)
 
     def forward(self, x):
         """

@@ -14,13 +14,13 @@ class TrainDataset(Dataset):
     def __init__(self, data_root, sample_list, label_list, size, mean, std, transforms=None):
         """
         Args:
-            data_root: 数据集根目录
+            data_root: str, 数据集根目录
             sample_list: list, 样本名
-            label_list: list, 类标，与sample_list中的样本按照顺序对应
+            label_list: list, 类标, 与sample_list中的样本按照顺序对应
             size: [height, width], 图片的目标大小
-            mean: 通道均值
-            std: 通道方差
-            transforms: 数据集转换方式
+            mean: tuple, 通道均值
+            std: tuple, 通道方差
+            transforms: callable, 数据集转换方式
         """
         super(TrainDataset, self).__init__()
         self.data_root = data_root
@@ -32,11 +32,19 @@ class TrainDataset(Dataset):
         self.transforms = transforms
     
     def __getitem__(self, index):
+        """
+        Args:
+            index: int, 当前的索引下标
+
+        Returns:
+            image: [channel, height, width] tensor, 当前索引下标对应的图像数据
+            label: [1] tensor, 当前索引下标对应的图像数据对应的类标
+        """
         sample_path = os.path.join(self.data_root, self.sample_list[index])
         image = Image.open(sample_path).convert('RGB')
         label = self.label_list[index]
         if self.transforms:
-            image  = np.asarray(image)
+            image = np.asarray(image)
             image = self.transforms(image)
             image = Image.fromarray(image)
         
@@ -52,11 +60,22 @@ class TrainDataset(Dataset):
         return image, label
 
     def __len__(self):
+        """ 得到训练数据集总共有多少个样本
+        """
         return len(self.sample_list)
     
 
 class ValDataset(Dataset):
     def __init__(self, data_root, sample_list, label_list, size, mean, std):
+        """
+        Args:
+            data_root: str, 数据集根目录
+            sample_list: list, 样本名
+            label_list: list, 类标, 与sample_list中的样本按照顺序对应
+            size: [height, width], 图片的目标大小
+            mean: tuple, 通道均值
+            std: tuple, 通道方差
+        """
         super(ValDataset, self).__init__()
         self.data_root = data_root
         self.sample_list = sample_list
@@ -66,6 +85,14 @@ class ValDataset(Dataset):
         self.std = std
     
     def __getitem__(self, index):
+        """
+        Args:
+            index: int, 当前的索引下标
+
+        Returns:
+            image: [channel, height, width] tensor, 当前索引下标对应的图像数据
+            label: [1] tensor, 当前索引下标对应的图像数据对应的类标
+        """
         sample_path = os.path.join(self.data_root, self.sample_list[index])
         image = Image.open(sample_path).convert('RGB')
         label = self.label_list[index]
@@ -82,6 +109,8 @@ class ValDataset(Dataset):
         return image, label
 
     def __len__(self):
+        """ 得到训练数据集总共有多少个样本
+        """
         return len(self.sample_list)
 
 
@@ -89,7 +118,7 @@ class GetDataloader(object):
     def __init__(self, data_root, folds_split=1, test_size=None, label_names_path='data/huawei_data/label_id_name.json'):
         """
         Args:
-            data_root: 数据集根目录
+            data_root: str, 数据集根目录
             folds_split: int, 划分为几折
             test_size: 验证集占的比例, [0, 1]
         """
@@ -106,13 +135,12 @@ class GetDataloader(object):
     
     def get_dataloader(self, batch_size, image_size, mean, std, transforms=None):
         """得到数据加载器
-
         Args:
-            batch_size: 批量大小
-            image_size: 图片大小
-            mean: 通道均值
-            std: 通道方差
-            transforms: 数据增强方式
+            batch_size: int, 批量大小
+            image_size: [height, width], 图片大小
+            mean: tuple, 通道均值
+            std: tuple, 通道方差
+            transforms: callable, 数据增强方式
         Return:
             train_dataloader_folds: list, [train_dataloader_0, train_dataloader_1,...]
             valid_dataloader_folds: list, [val_dataloader_0, val_dataloader_1, ...]
@@ -122,7 +150,8 @@ class GetDataloader(object):
         self.draw_train_val_distribution(train_lists, val_lists)
 
         for train_list, val_list in zip(train_lists, val_lists):
-            train_dataset = TrainDataset(self.data_root, train_list[0], train_list[1], image_size, transforms=transforms, mean=mean, std=std)
+            train_dataset = TrainDataset(self.data_root, train_list[0], train_list[1], image_size,
+                                         transforms=transforms, mean=mean, std=std)
             val_dataset = ValDataset(self.data_root, val_list[0], val_list[1], image_size, mean=mean, std=std)
 
             train_dataloader = DataLoader(
@@ -144,6 +173,12 @@ class GetDataloader(object):
         return train_dataloader_folds, valid_dataloader_folds
 
     def draw_train_val_distribution(self, train_lists, val_lists):
+        """ 画出各个折的训练集与验证集的数据分布
+
+        Args:
+            train_lists: list, 每一个数据均为[train_sample, train_label], train_sample: list, 样本名称， train_label: list, 样本类标
+            val_lists: list, 每一个数据均为[val_sample, val_label]， val_sample: list, 样本名称， val_label: list, 样本类标
+        """
         for index, (train_list, val_list) in enumerate(zip(train_lists, val_lists)):
             train_labels_number = {}
             for label in train_list[1]:
@@ -161,6 +196,11 @@ class GetDataloader(object):
             self.draw_labels_number(val_labels_number, phase='Val_%s' % index)
 
     def draw_labels_number(self, labels_number, phase='Train'):
+        """ 画图函数
+        Args:
+            labels_number: dict, {label_1: number_1, label_2: number_2, ...}
+            phase: str, 当前模式
+        """
         labels = labels_number.keys()
         number = labels_number.values()
         name = [self.label_to_name[str(label)] for label in labels]
@@ -179,13 +219,13 @@ class GetDataloader(object):
         for rect in rects:
             height = rect.get_height()
             plt.text(rect.get_x() + rect.get_width() / 2, height+1, str(height), ha="center", va="bottom")
-        plt.savefig('%s.jpg' % phase, dpi=240)
+        plt.savefig('readme/%s.jpg' % phase, dpi=240)
         
     def get_split(self):
         """对数据集进行划分
         Return:
-            train_list: [train_sample, train_label], train_sample: list, 样本名称， train_label: list, 样本类标
-            val_list: [val_sample, val_label]， val_sample: list, 样本名称， val_label: list, 样本类标
+            train_list: list, 每一个数据均为[train_sample, train_label], train_sample: list, 样本名称， train_label: list, 样本类标
+            val_list: list, 每一个数据均为[val_sample, val_label]， val_sample: list, 样本名称， val_label: list, 样本类标
         """
         if self.folds_split == 1:
             train_list, val_list = self.get_data_split_single()
@@ -196,9 +236,12 @@ class GetDataloader(object):
         
     def get_data_split_single(self):
         """随机划分训练集和验证集
+        Return:
+            [train_samples, train_labels], train_samples: list, 样本名称， train_labels: list, 样本类标
+            [val_samples, val_labels], val_samples: list, 样本名称， val_labels: list, 样本类标
         """
         samples_index = [i for i in range(len(self.samples))]
-        train_index, val_index = train_test_split(samples_index, test_size=self.test_size, stratify=self.labels, random_state=69)
+        train_index, val_index = train_test_split(samples_index, test_size=self.test_size, random_state=69)
         train_samples = [self.samples[i] for i in train_index]
         train_labels = [self.labels[i] for i in train_index]
         val_samples = [self.samples[i] for i in val_index]
@@ -207,6 +250,9 @@ class GetDataloader(object):
     
     def get_data_split_folds(self):
         """交叉验证的数据划分
+        Return:
+            train_folds: list, 所有折的[train_samples, train_labels], train_samples: list, 样本名称， train_labels: list, 样本类标
+            val_folds: list, 所有折的[val_samples, val_labels], val_samples: list, 样本名称， val_labels: list, 样本类标
         """
         skf = StratifiedKFold(n_splits=self.folds_split, shuffle=True, random_state=69)
         train_folds = []
@@ -221,6 +267,11 @@ class GetDataloader(object):
         return train_folds, val_folds
 
     def get_samples_labels(self):
+        """ 得到所有的图片名称以及对应的类标
+        Returns:
+            samples: list, 所有的图片名称
+            labels: list, 所有的图片对应的类标, 和samples一一对应
+        """
         files_list = os.listdir(self.data_root)
         # 过滤得到标注文件
         annotations_files_list = [f for f in files_list if f.split('.')[1] == 'txt']
@@ -239,7 +290,7 @@ class GetDataloader(object):
 
 
 if __name__ == "__main__":
-    data_root = '/media/mxq/data/competition/HuaWei/train_data'
+    data_root = 'data/huawei_data/train_data'
     folds_split = 1
     test_size = 0.2
     mean = (0.485, 0.456, 0.406)

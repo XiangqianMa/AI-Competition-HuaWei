@@ -114,6 +114,10 @@ Bucket number is: 2
 ### Use obsutil
 Please manually place the weight file `model_best.pth` to the `online-service/model` directory. Manually change the selected model in `online-service/model/customize_service.py` file.
 
+Notice that, when you copy pyfiles from `models` to `online-service/model/deploy_models`, you should change import path of Python package. For example, change `from models.custom_model import CustomModel` to `from model.deploy_models.custom_model import CustomModel` in `online-service/model/deploy_models/custom_model.py`. 
+
+And notice that, you should modify the parameters in the prepare_model.create_model function in the `online-service/model/customize_service.py` and `online-service/offline_service.py` according to the actual needs.
+
 When you first use it, you should run this:
 ```bash
 cd online-service

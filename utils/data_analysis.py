@@ -1,18 +1,19 @@
-import matplotlib.pyplot as plt
-import matplotlib
 import os
-import numpy as np
-from PIL import Image
-from matplotlib.font_manager import FontProperties
-from sklearn.model_selection import KFold, StratifiedKFold, StratifiedShuffleSplit
-import random
 import json
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.font_manager import FontProperties
 
 
-class DatasetStatistic():
+class DatasetStatistic:
     """对数据集的分布进行统计
     """
     def __init__(self, data_root, label_id_json):
+        """
+        Args:
+            data_root: str, 数据根目录
+            label_id_json: str, label_id_json文件目录
+        """
         self.data_root = data_root
         self.label_id_json = label_id_json
     
@@ -33,7 +34,6 @@ class DatasetStatistic():
             name_download_number[name.split('/')[1]] = download_number
         
         return name_download_number
-
 
     def get_label_number(self):
         """得到每一个类别对应的样本数目

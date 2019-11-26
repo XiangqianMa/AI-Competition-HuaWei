@@ -1,6 +1,4 @@
-import json
 import argparse
-from argparse import Namespace
 
 
 def get_classify_config():
@@ -20,6 +18,7 @@ def get_classify_config():
     # model set 
     parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d', help='resnet50/se_resnext101_32x4d')
     parser.add_argument('--last_stride', type=int, default=2, help='last stride in the resnet model')
+    parser.add_argument('--droprate', type=float, default=0, help='dropout rate in classify module')
 
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
@@ -27,8 +26,8 @@ def get_classify_config():
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
     # 学习率衰减策略
     parser.add_argument('--lr_scheduler', type=str, default='StepLR', help='lr scheduler')
-    parser.add_argument('--lr_step_size', type=str, default=20, help='step_size for StepLR scheduler')
-    parser.add_argument('--restart_step', type=str, default=80, help='T_max for CosineAnnealingLR scheduler')
+    parser.add_argument('--lr_step_size', type=int, default=20, help='step_size for StepLR scheduler')
+    parser.add_argument('--restart_step', type=int, default=80, help='T_max for CosineAnnealingLR scheduler')
     # 优化器
     parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type')
     # 损失函数

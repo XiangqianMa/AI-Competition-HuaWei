@@ -22,6 +22,11 @@ from datasets.data_augmentation import DataAugmentation
 
 class TrainVal:
     def __init__(self, config, fold):
+        """
+        Args:
+            config: 配置参数
+            fold: 当前为第几折
+        """
         self.config = config
         self.fold = fold
         self.epoch = config.epoch
@@ -33,7 +38,8 @@ class TrainVal:
         self.model = prepare_model.create_model(
             model_type=config.model_type,
             classes_num=self.num_classes,
-            last_stride=config.last_stride
+            last_stride=config.last_stride,
+            droprate=config.droprate
         )
         if torch.cuda.is_available():
             self.model = torch.nn.DataParallel(self.model)
@@ -101,9 +107,9 @@ class TrainVal:
                     params_groups_lr = params_groups_lr + 'params_group_%d' % group_ind + ': %.12f, ' % param_group[
                         'lr']
 
-                descript = '[Train][epoch: {}/{}][Lr :{}][Acc: {:.4f}]'.format(epoch, self.epoch,
-                                                                               params_groups_lr,
-                                                                               train_acc_iteration) + descript
+                descript = '[Train Fold {}][epoch: {}/{}][Lr :{}][Acc: {:.4f}]'.format(self.fold, epoch, self.epoch,
+                                                                                       params_groups_lr,
+                                                                                       train_acc_iteration) + descript
 
                 tbar.set_description(desc=descript)
 
@@ -142,7 +148,7 @@ class TrainVal:
     def validation(self, valid_loader):
         tbar = tqdm.tqdm(valid_loader)
         self.model.eval()
-        labels_predict_all, labels_all = np.empty(shape=(0, )), np.empty(shape=(0, ))
+        labels_predict_all, labels_all = np.empty(shape=(0,)), np.empty(shape=(0,))
         epoch_loss = 0
         with torch.no_grad():
             for i, (images, labels) in enumerate(tbar):
@@ -184,7 +190,7 @@ class TrainVal:
 
             print('OA:{}, AA:{}, Kappa:{}'.format(oa, average_accuracy, kappa))
 
-            return oa, epoch_loss/len(tbar), is_best
+            return oa, epoch_loss / len(tbar), is_best
 
     def init_log(self):
         # 保存配置信息和初始化tensorboard

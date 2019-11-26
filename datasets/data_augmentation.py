@@ -87,7 +87,9 @@ class DataAugmentation(object):
     def __init__(self, erase_prob=0.0, full_aug=True, gray_prob=0.0):
         """
         Args:
-            full_aug: 是否对整幅图片进行随机增强
+            erase_prob: float, 随机擦除的概率
+            full_aug: bool, 是否对图片进行随机增强
+            gray_prob: float, 随机灰度变换的概率
         """
         self.full_aug = full_aug
         self.erase_prob = erase_prob
@@ -98,10 +100,11 @@ class DataAugmentation(object):
 
     def __call__(self, image):
         """
-        :param image: 传入的图片
-        :return: 经过数据增强后的图片
+        Args:
+            image: 传入的图片
+        Returns: 经过数据增强后的图片
         """
-        # 先随机擦除
+        # 随机擦除
         if self.erase_prob > 0:
             image = self.random_erase(image)
         # 转为灰度
