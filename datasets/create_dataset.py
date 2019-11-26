@@ -229,7 +229,7 @@ class GetDataloader(object):
         labels = []
         for annotation_file in annotations_files_list:
             annotation_file_path = os.path.join(self.data_root, annotation_file)
-            with open(annotation_file_path) as f:
+            with open(annotation_file_path, encoding='utf-8-sig') as f:
                 for sample_label in f:
                     sample_name = sample_label.split(', ')[0]
                     label = int(sample_label.split(', ')[1])

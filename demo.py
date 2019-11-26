@@ -12,11 +12,12 @@ from config import get_classify_config
 
 
 class DemoResults(object):
-    def __init__(self, model_type, classes_num, weight_path, image_size, label_json_path, mean=[], std=[]):
+    def __init__(self, model_type, classes_num, weight_path, image_size, label_json_path, last_stride=2, mean=[], std=[]):
         self.model_type = model_type
         self.classes_num = classes_num
         self.weight_path = weight_path
         self.image_size = image_size
+        self.last_stride = last_stride
         self.mean = mean
         self.std = std
         self.model, self.label_dict = self.__prepare__(label_json_path)
@@ -86,7 +87,7 @@ class DemoResults(object):
 
     def __prepare__(self, label_json_path):
         prepare_model = PrepareModel()
-        model = prepare_model.create_model(self.model_type, self.classes_num)
+        model = prepare_model.create_model(self.model_type, self.classes_num, self.last_stride)
         model.load_state_dict(torch.load(self.weight_path)['state_dict'])
         model = model.cuda()
         model.eval()

@@ -29,7 +29,7 @@ def combine_dataset(download_root, official_root, combine_root):
 
 
 if __name__ == "__main__":
-    download_root = '/media/mxq/data/competition/HuaWei/cleaned_dowload_images'
+    download_root = '/media/mxq/data/competition/HuaWei/cleaned_pesudeo_image'
     official_root = '/media/mxq/data/competition/HuaWei/train_data'
     combine_root = '/media/mxq/data/competition/HuaWei/combine'
     combine_dataset(download_root, official_root, combine_root)
