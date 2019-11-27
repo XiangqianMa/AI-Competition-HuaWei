@@ -66,7 +66,7 @@ class Loss(nn.Module):
 
             # 保留接口
             else:
-                raise ValueError('%s is not implemented yet.' % l['type'])
+                pass
 
         loss_sum = sum(losses)
         if len(self.loss_struct) > 1:

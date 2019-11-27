@@ -45,7 +45,8 @@ class PrepareModel:
             lr_scheduler_type,
             optimizer,
             step_size=None,
-            restart_step=None
+            restart_step=None,
+            multi_step=None
     ):
         """创建学习率衰减器
         Args:
@@ -64,5 +65,9 @@ class PrepareModel:
             if not restart_step:
                 raise ValueError('You must specified restart_step when you are using CosineLR.')
             my_lr_scheduler = lr_scheduler.CosineAnnealingLR(optimizer, restart_step)
+        elif lr_scheduler_type == 'MultiStepLR':
+            if not multi_step:
+                raise ValueError('You must specified multi step when you are using MultiStepLR.')
+            my_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, multi_step)            
 
         return my_lr_scheduler

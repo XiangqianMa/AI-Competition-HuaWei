@@ -54,6 +54,7 @@ class TrainVal:
             self.optimizer,
             step_size=config.lr_step_size,
             restart_step=config.restart_step,
+            multi_step=config.multi_step
         )
 
         # 加载损失函数
