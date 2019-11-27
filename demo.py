@@ -12,12 +12,13 @@ from config import get_classify_config
 
 
 class DemoResults(object):
-    def __init__(self, model_type, classes_num, weight_path, image_size, label_json_path, last_stride=2, mean=[], std=[]):
+    def __init__(self, model_type, classes_num, weight_path, image_size, label_json_path, last_stride=2, drop_rate=0.0, mean=[], std=[]):
         self.model_type = model_type
         self.classes_num = classes_num
         self.weight_path = weight_path
         self.image_size = image_size
         self.last_stride = last_stride
+        self.drop_rate = drop_rate
         self.mean = mean
         self.std = std
         self.model, self.label_dict = self.__prepare__(label_json_path)
@@ -87,7 +88,7 @@ class DemoResults(object):
 
     def __prepare__(self, label_json_path):
         prepare_model = PrepareModel()
-        model = prepare_model.create_model(self.model_type, self.classes_num, self.last_stride)
+        model = prepare_model.create_model(self.model_type, self.classes_num, self.last_stride, self.drop_rate)
         model.load_state_dict(torch.load(self.weight_path)['state_dict'])
         model = model.cuda()
         model.eval()
@@ -101,7 +102,7 @@ class DemoResults(object):
 
 if __name__ == "__main__":
     config = get_classify_config()
-    weight_path = 'checkpoints/resnet50/log-2019-11-22T14-07-32/resnet50_fold0_best.pth'
+    weight_path = 'checkpoints/se_resnext101_32x4d/log-2019-11-26T23-24-58-dropout/model_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
     samples_root = 'data/demo_data/images'
     save_path = 'data/demo_data/results'
@@ -110,5 +111,15 @@ if __name__ == "__main__":
     save = False
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
-    demo_predicts = DemoResults(config.model_type, config.num_classes, weight_path, config.image_size, label_json_path, mean=mean, std=std)
+    demo_predicts = DemoResults(
+        config.model_type, 
+        config.num_classes, 
+        weight_path, 
+        config.image_size, 
+        label_json_path, 
+        last_stride=config.last_stride, 
+        drop_rate=config.droprate, 
+        mean=mean, 
+        std=std
+        )
     demo_predicts.predict_multi_smaples(samples_root, rank, show, save, save_path)
