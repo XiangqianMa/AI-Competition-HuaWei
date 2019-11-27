@@ -113,7 +113,7 @@ class ClassificationMetric:
         plt.xlabel('Index of Predict Classes')
 
         if self.save_result:
-            plt.savefig(os.path.join(self.save_path, 'confusion_matrix'), dpi=120)
+            plt.savefig(os.path.join(self.save_path, 'confusion_matrix'), dpi=200)
 
             result = {'acc_for_each_class': acc_for_each_class.tolist(),
                       'OA': oa, 'AA': average_accuracy, 'kappa': kappa,
