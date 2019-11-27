@@ -24,7 +24,7 @@ class Loss(nn.Module):
             elif loss_type == 'SmoothCrossEntropy':
                 loss_function = CrossEntropyLabelSmooth(num_classes=num_classes)
             elif loss_type == 'FocalLoss':
-                loss_function = MultiFocalLoss(gamma=2, alpha=0.25)
+                loss_function = MultiFocalLoss(gamma=2)
             else:
                 assert "loss: {} not support yet".format(self.loss_name)
 
