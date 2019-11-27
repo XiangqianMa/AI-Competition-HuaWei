@@ -10,3 +10,5 @@ Train*.jpg
 Val*.jpg
 online-service/obsutil
 online-service/setup.sh
+.~record.xlsx
+record.csv
