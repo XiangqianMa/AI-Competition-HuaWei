@@ -112,11 +112,14 @@ Bucket number is: 2
 ```
 
 ### Use obsutil
-Please manually place the weight file `model_best.pth` to the `online-service/model` directory. Manually change the selected model in `online-service/model/customize_service.py` file.
+Please Manually change the selected model in `online-service/model/customize_service.py` file.  And  manually change the `model` parameters in `online-service/upload.sh`.  The script will automatically find the newly modified folder from the `checkpoints/${model}` directory and copy the `model_best.pth` from it to the `online-service/model` directory.
 
-Notice that, when you copy pyfiles from `models` to `online-service/model/deploy_models`, you should change import path of Python package. For example, change `from models.custom_model import CustomModel` to `from model.deploy_models.custom_model import CustomModel` in `online-service/model/deploy_models/custom_model.py`. 
+> If you want to place the `model_best.pth` file manually, please comment out the `cp ../checkpoints/${model}/${filename}/model_best.pth online-service/model` line in the `online-service/upload.sh` file. Then manually place the weight file `model_best.pth` to the `online-service/model` directory.
 
-And notice that, you should modify the parameters in the prepare_model.create_model function in the `online-service/model/customize_service.py` and `online-service/offline_service.py` according to the actual needs.
+Notice that, when you copy pyfiles from `models` to `online-service/model/deploy_models`, you should pay attention to these
+
+- change import path of Python package. For example, change `from models.custom_model import CustomModel` to `from model.deploy_models.custom_model import CustomModel` in `online-service/model/deploy_models/custom_model.py`. 
+- modify the parameters of `prepare_model.create_model` function in the `online-service/model/customize_service.py` and `online-service/offline_service.py` according to the actual needs.
 
 When you first use it, you should run this:
 ```bash
@@ -128,7 +131,7 @@ Then, this script will create a bucket called `ai-competition-$USER` in your OBS
 
 > $USER is your Linux username
 
-If you want to update the weight file or python files. Please manually put new weight file and new python files in the corresponding directory. And you should run this:
+If you want to update the weight file or python files. Please manually put new python files in the corresponding directory. And run this:
 ```bash
 ./upload.sh
 ```
