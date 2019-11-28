@@ -31,6 +31,7 @@ class TrainVal:
         self.fold = fold
         self.epoch = config.epoch
         self.num_classes = config.num_classes
+        self.lr_scheduler = config.lr_scheduler
         print('USE LOSS: {}'.format(config.loss_name))
 
         # 加载模型
@@ -50,7 +51,7 @@ class TrainVal:
 
         # 加载衰减策略
         self.exp_lr_scheduler = prepare_model.create_lr_scheduler(
-            config.lr_scheduler,
+            self.lr_scheduler,
             self.optimizer,
             step_size=config.lr_step_size,
             restart_step=config.restart_step,
@@ -114,14 +115,10 @@ class TrainVal:
 
                 tbar.set_description(desc=descript)
 
-            # 每一个epoch完毕之后，执行学习率衰减
-            self.exp_lr_scheduler.step()
-            global_step += len(train_loader)
-
             # 写到tensorboard中
             epoch_acc = epoch_corrects / images_number
             self.writer.add_scalar('TrainAccEpoch', epoch_acc, epoch)
-            self.writer.add_scalar('Lr', self.exp_lr_scheduler.get_lr()[0], epoch)
+            self.writer.add_scalar('Lr', self.optimizer.param_groups[0]['lr'], epoch)
             descript = self.criterion.record_loss_epoch(len(train_loader), self.writer.add_scalar, epoch)
 
             # Print the log info
@@ -130,6 +127,7 @@ class TrainVal:
             # 验证模型
             val_accuracy, val_loss, is_best = self.validation(valid_loader)
 
+            # 保存参数
             state = {
                 'epoch': epoch,
                 'state_dict': self.model.module.state_dict(),
@@ -143,8 +141,17 @@ class TrainVal:
                 state,
                 is_best
             )
+
+            # 写到tensorboard中
             self.writer.add_scalar('ValidLoss', val_loss, epoch)
             self.writer.add_scalar('ValidAccuracy', val_accuracy, epoch)
+
+            # 每一个epoch完毕之后，执行学习率衰减
+            if self.lr_scheduler == 'ReduceLR':
+                self.exp_lr_scheduler.step(val_loss)
+            else:
+                self.exp_lr_scheduler.step()
+            global_step += len(train_loader)
 
     def validation(self, valid_loader):
         tbar = tqdm.tqdm(valid_loader)
