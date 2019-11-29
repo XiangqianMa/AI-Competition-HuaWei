@@ -18,7 +18,7 @@ if [ $1 -eq -1 ]; then
 fi
 
 echo move ../checkpoints/${model}/${filename}/model_best.pth
-cp ../checkpoints/${model}/${filename}/model_best.pth online-service/model
+cp ../checkpoints/${model}/${filename}/model_best.pth model
 
 # 上传model文件夹，并且采用增量上传的方式，上传每个文件时会对比桶中对应路径的对象，仅在对象不存在，
 #　或者对象大小与文件大小不一致，或者对象的最后修改时间早于文件的最后修改时间时进行上传。
