@@ -49,7 +49,8 @@ class TrainDataset(Dataset):
             image = Image.fromarray(image)
         
         transform_train_list = [
-                    T.Resize(self.size, interpolation=3),
+                    T.Resize([300, 300], interpolation=3),
+                    T.CenterCrop(self.size),
                     T.ToTensor(),
                     T.Normalize(self.mean, self.std)
                 ]          
@@ -97,8 +98,7 @@ class ValDataset(Dataset):
         image = Image.open(sample_path).convert('RGB')
         label = self.label_list[index]
         transform_val_list = [ 
-                    T.Resize([300, 300], interpolation=3),
-                    T.CenterCrop(self.size),
+                    T.Resize(self.size, interpolation=3),
                     T.ToTensor(),
                     T.Normalize(self.mean, self.std)
                 ]          
