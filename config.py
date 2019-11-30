@@ -16,7 +16,7 @@ def get_classify_config():
     parser.add_argument('--n_splits', type=int, default=5, help='n_splits_fold')
     parser.add_argument('--val_size', type=float, default=0.2, help='the ratio of val data when n_splits=1.')
     # model set 
-    parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d', help='resnet50/se_resnext101_32x4d/se_resnet152')
+    parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d', help='resnet50/se_resnext101_32x4d')
     parser.add_argument('--last_stride', type=int, default=2, help='last stride in the resnet model')
     parser.add_argument('--droprate', type=float, default=0, help='dropout rate in classify module')
 
@@ -25,7 +25,8 @@ def get_classify_config():
     parser.add_argument('--lr', type=float, default=1e-2, help='init lr')
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
     # 学习率衰减策略
-    parser.add_argument('--lr_scheduler', type=str, default='StepLR', help='lr scheduler, one of [StepLR/CosineLR/MultiStepLR]')
+    parser.add_argument('--lr_scheduler', type=str, default='StepLR',
+                        help='lr scheduler, StepLR/CosineLR/ReduceLR/MultiStepLR')
     parser.add_argument('--lr_step_size', type=int, default=20, help='step_size for StepLR scheduler')
     parser.add_argument('--restart_step', type=int, default=80, help='T_max for CosineAnnealingLR scheduler')
     parser.add_argument('--multi_step', type=list, default=[20, 35, 45], help='Milestone of multi_step')
