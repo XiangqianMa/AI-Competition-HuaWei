@@ -5,7 +5,7 @@ def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[256, 256], help='image size')
     parser.add_argument('--batch_size', type=int, default=24, help='batch size')
-    parser.add_argument('--epoch', type=int, default=60, help='epoch')
+    parser.add_argument('--epoch', type=int, default=50, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')
@@ -33,11 +33,11 @@ def get_classify_config():
     parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type')
     # 损失函数
     parser.add_argument('--loss_name', type=str, default='1.0*SmoothCrossEntropy',
-                        help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss')
+                        help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss/0.75*SmoothCrossEntropy+0.25*FocalLoss')
 
     # 路径
     parser.add_argument('--save_path', type=str, default='./checkpoints')
-    parser.add_argument('--dataset_root', type=str, default='data/huawei_data/train_data')
+    parser.add_argument('--dataset_root', type=str, default='data/huawei_data/combine')
 
     config = parser.parse_args()
 
