@@ -22,7 +22,14 @@ class PredictDownloadImage(object):
         self.std = std
         self.model, self.label_dict = self.__prepare__(label_json_path)
 
-    def predict_multi_smaples(self, samples_root, thresh=0.6, save_path=''):
+    def predict_multi_smaples(self, samples_root, thresh={}, save_path=''):
+        """预测多张样本的伪标签，并将保留下的样本存放至指定的目录下
+
+        Args:
+            samples_root: 原始样本的路径
+            thresh: dir, {'大雁塔': 0.95, ...}
+            save_path: 保存路径
+        """
         samples_list = os.listdir(samples_root)
         samples_list = set([sample.split('.')[0] for sample in samples_list])
         images_name = [sample + '.jpg' for sample in samples_list]
@@ -37,8 +44,9 @@ class PredictDownloadImage(object):
             print('Making %s' % save_path)
             os.mkdir(save_path)
         for image_name in tbar:
+            current_thresh = thresh[image_name.split('_')[0]]
             image_path = os.path.join(samples_root, image_name)
-            index, predict_label, remain = self.predict_single_sample(image_path, thresh=thresh)
+            index, predict_label, remain = self.predict_single_sample(image_path, thresh=current_thresh)
             if remain:
                 descript = 'Remain: %s' % image_name
                 self.save_image_label(save_path, image_path, image_name, predict_label, index)
@@ -101,7 +109,7 @@ class PredictDownloadImage(object):
 
     def __prepare__(self, label_json_path):
         prepare_model = PrepareModel()
-        model = prepare_model.create_model(self.model_type, self.classes_num)
+        model = prepare_model.create_model(self.model_type, self.classes_num, 2, 0, pretrained=False)
         model.load_state_dict(torch.load(self.weight_path)['state_dict'])
         model = model.cuda()
         model.eval()
@@ -113,14 +121,41 @@ class PredictDownloadImage(object):
         return model, label_dict
 
 
+def compute_labels_thresh(labels_scores, thresh_max=0.95, thresh_min=0.85):
+    """依据各个类别的分数计算产生伪标签时的阈值
+
+    Args:
+        labels_scores: dir, {'大雁塔': 0.85, ...}
+        thresh_max: 最大阈值
+        thresh_min: 最小阈值
+    Returns:
+        labels_thresh: 类别对应的阈值 dir, {’大雁塔': 0.85, ...}
+    """
+    scores = labels_scores.values()
+    max_score = max(scores)
+    min_score = min(scores)
+    labels_thresh = {}
+    for label, score in labels_scores.items():
+        thresh = (max_score - score) / (max_score - min_score) * (thresh_max - thresh_min) + thresh_min
+        labels_thresh[label] = thresh
+    
+    return labels_thresh
+
+
 if __name__ == "__main__":
     config = get_classify_config()
     weight_path = 'checkpoints/resnet50/log-2019-11-23T20-33-13-加入新数据-0.9360/model_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
     samples_root = '/media/mxq/data/competition/HuaWei/download_image'
     save_path = '/media/mxq/data/competition/HuaWei/psudeo_image'
-    thresh = 0.8
+    labels_score_file = ''
+
+    thresh_max = 0.95
+    thresh_min = 0.85
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
+    with open(labels_score_file, 'r') as f:
+        labels_score = json.load(f)
+    labels_thresh = compute_labels_thresh(labels_score, thresh_max, thresh_min)
     predict_download_images = PredictDownloadImage(config.model_type, config.num_classes, weight_path, config.image_size, label_json_path, mean=mean, std=std)
-    predict_download_images.predict_multi_smaples(samples_root, thresh=thresh, save_path=save_path)
+    predict_download_images.predict_multi_smaples(samples_root, thresh=labels_thresh, save_path=save_path)
