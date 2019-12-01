@@ -123,7 +123,7 @@ class ClassificationMetric:
                 json.dump(result, json_file, ensure_ascii=False)
 
             classes_acc = {}
-            for label_name, each_class_acc in zip(self.labels, oa):
+            for label_name, each_class_acc in zip(self.labels, acc_for_each_class.tolist()):
                 classes_acc[label_name] = each_class_acc
             with codecs.open(os.path.join(self.save_path, 'classes_acc.json'), 'w', "utf-8") as json_file:
                 json.dump(classes_acc, json_file, ensure_ascii=False)
