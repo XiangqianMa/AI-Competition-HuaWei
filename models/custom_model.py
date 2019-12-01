@@ -19,46 +19,17 @@ class CustomModel(nn.Module):
         self.num_classes = num_classes
         self.last_stride = last_stride
 
-        if self.model_name.startswith('resnet'):
-            model = getattr(models, self.model_name)(pretrained=pretrained)
-            if self.model_name == 'resnet18' or self.model_name == 'resnet34':
-                model.layer4[0].conv1.stride = (self.last_stride, self.last_stride)
-            else:
-                model.layer4[0].conv2.stride = (self.last_stride, self.last_stride)
-            model.layer4[0].downsample[0].stride = (self.last_stride, self.last_stride)
-            in_features = model.fc.in_features
-            self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
-
-        elif self.model_name.startswith('dpn'):
-            if pretrained:
-                pretrained_type = 'imagenet'
-            else:
-                pretrained_type = None
-            model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
-            in_features = model.last_linear.in_channels
-            self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
-            self.feature_layer.avg_pool = torch.nn.AdaptiveAvgPool2d(output_size=(1, 1))
-
-        elif self.model_name.startswith('densenet'):
-            if pretrained:
-                pretrained_type = 'imagenet'
-            else:
-                pretrained_type = None           
-            model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
-            in_features = model.last_linear.in_features
-            self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
-            self.feature_layer.avg_pool = torch.nn.AdaptiveAvgPool2d(output_size=(1, 1))
-
+        if pretrained:
+            pretrained_type = 'imagenet'
         else:
-            if pretrained:
-                pretrained_type = 'imagenet'
-            else:
-                pretrained_type = None            
-            model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
-            model.avg_pool = torch.nn.AdaptiveAvgPool2d(output_size=(1, 1))
-            in_features = model.last_linear.in_features
-            self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
+            pretrained_type = None
+        model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
+        self.feature_layer1 = torch.nn.Sequential(*list(model.children())[:-3])
+        self.conv1 = torch.nn.Conv2d(1024, 1024, [3, 3], stride=2, padding=1, groups=1024)
+        self.feature_layer2 = torch.nn.Sequential(*list(model.children())[-3:-2])
+        self.avg_pool = torch.nn.AdaptiveAvgPool2d(output_size=(1, 1))
 
+        in_features = 1024 + 2048
         add_block = [nn.Linear(in_features, 1024), nn.ReLU()]
         if droprate > 0:
             add_block += [nn.Dropout(p=droprate)]
@@ -73,8 +44,12 @@ class CustomModel(nn.Module):
 
         Returns: 网络预测的类别；类型为tensor；维度为[batch_size, num_classes]
         """
-        global_features = self.feature_layer(x)
-        global_features = global_features.view(global_features.shape[0], -1)
+        x = self.feature_layer1(x)
+        feature1 = self.conv1(x)
+        feature2 = self.feature_layer2(x)
+        feature = torch.cat([feature1, feature2], dim=1)
+        feature = self.avg_pool(feature)
+        global_features = feature.view(feature.shape[0], -1)
         scores = self.classifier(global_features)
         return scores
 

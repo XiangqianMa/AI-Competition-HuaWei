@@ -232,7 +232,7 @@ if __name__ == "__main__":
                                                                        transforms=transforms)
 
     for fold_index, [train_loader, valid_loader] in enumerate(zip(train_dataloaders, val_dataloaders)):
-        # if fold_index != 3:
-        #     continue
+        if fold_index != 0:
+            continue
         train_val = TrainVal(config, fold_index)
         train_val.train(train_loader, valid_loader)

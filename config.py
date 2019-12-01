@@ -27,7 +27,7 @@ def get_classify_config():
     # 学习率衰减策略
     parser.add_argument('--lr_scheduler', type=str, default='StepLR',
                         help='lr scheduler, StepLR/CosineLR/ReduceLR/MultiStepLR')
-    parser.add_argument('--lr_step_size', type=int, default=20, help='step_size for StepLR scheduler')
+    parser.add_argument('--lr_step_size', type=int, default=10, help='step_size for StepLR scheduler')
     parser.add_argument('--restart_step', type=int, default=80, help='T_max for CosineAnnealingLR scheduler')
     parser.add_argument('--multi_step', type=list, default=[20, 35, 45], help='Milestone of multi_step')
     # 优化器
@@ -38,7 +38,7 @@ def get_classify_config():
 
     # 路径
     parser.add_argument('--save_path', type=str, default='./checkpoints')
-    parser.add_argument('--dataset_root', type=str, default='data/huawei_data/combine')
+    parser.add_argument('--dataset_root', type=str, default='data/huawei_data/combine_without_delete')
 
     config = parser.parse_args()
 
