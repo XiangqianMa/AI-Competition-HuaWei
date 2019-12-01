@@ -12,6 +12,9 @@ from models.build_model import PrepareModel
 from config import get_classify_config
 
 
+#############################################
+# 进行伪标签预测，并将大于设定阈值的样本移动到指定目录
+#############################################
 class PredictDownloadImage(object):
     def __init__(self, model_type, classes_num, weight_path, image_size, label_json_path, mean=[], std=[]):
         self.model_type = model_type

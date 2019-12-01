@@ -6,6 +6,9 @@ import json
 import random
 
 
+#########################
+# 依据类别得分动态拷贝样本 
+#########################
 def combine_dataset(download_root, official_root, combine_root, labels_to_complement_number):
     if os.path.exists(combine_root):
         print('Removing %s' % combine_root)
@@ -41,11 +44,12 @@ def combine_dataset(download_root, official_root, combine_root, labels_to_comple
         shutil.copy(scr_file, target_file)
 
 
-def calculate_complement_number(labels_scores, max_number):
+def calculate_complement_number(labels_scores, max_number, min_number):
     """
     按照分数计算需要补充的样本数目
     :param labels_scores: 各个类别的得分
     :param max_number: 最大补充样本数
+    :param min_number: 最少补充样本上数
     :return:
     """
     max_score = sorted(labels_scores.values())[-1]
@@ -53,7 +57,7 @@ def calculate_complement_number(labels_scores, max_number):
     labels_to_complement_number = {}
     for key, value in labels_scores.items():
         # 得分越高，补充的样本数目越少
-        complement_number = int((max_score - value) / (max_score - min_score) * max_number + 1)
+        complement_number = int((max_score - value) / (max_score - min_score) * (max_number - min_number) + min_number)
         labels_to_complement_number[key] = complement_number
 
     return labels_to_complement_number
@@ -69,12 +73,12 @@ if __name__ == "__main__":
     labels = [label.split('/')[1] for label in labels]
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
     # 最少补充样本数
-    min_complement_number = 20
+    min_complement_number = 30
     # 最多补充样本数
-    max_complement_number = 80
-    # 各个类别与具有最多样本的类别之间的样本数目差距
-    # diff_to_max_number = dataset_statistic.get_download_number()
+    max_complement_number = 90
     labels_scores = {
+        '仿唐三彩': 0.95,
+        '景泰蓝': 0.95,
         '葡萄花鸟纹银香囊': 0.90,
         '西安剪纸': 0.91,
         '陕历博唐妞系列': 0.95,
@@ -83,6 +87,7 @@ if __name__ == "__main__":
         '玉器': 0.91,
         '阎良甜瓜': 0.93,
         '凉鱼': 0.86,
+        '羊肉泡馍': 0.95,
         '搅团': 0.75,
         '浆水面': 0.78,
         '神仙粉': 0.88,
@@ -91,11 +96,6 @@ if __name__ == "__main__":
         '醪糟': 0.92,
         '金线油塔': 0.94,
     }
-    labels_to_complement_number = calculate_complement_number(labels_scores, max_complement_number)
-    for label in labels:
-        if label in labels_to_complement_number.keys():
-            labels_to_complement_number[label] += min_complement_number
-        else:
-            labels_to_complement_number[label] = min_complement_number
+    labels_to_complement_number = calculate_complement_number(labels_scores, max_complement_number, min_complement_number)
     print(labels_to_complement_number)
     combine_dataset(download_root, data_root, combine_root, labels_to_complement_number)
