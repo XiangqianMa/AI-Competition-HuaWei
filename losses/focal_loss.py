@@ -1,7 +1,3 @@
-import numpy as np
-import time
-import random
-
 import torch
 from torch import nn 
 import torch.nn.functional as F
@@ -32,13 +28,16 @@ class MultiFocalLoss(nn.Module):
         target = target.view(-1, 1)
 
         logpt = F.log_softmax(input)
+        # 沿给定轴dim，将输入索引张量index指定位置的值进行聚合。即取出真实类标对应的预测概率，logpt维度为[batch]
         logpt = logpt.gather(1, target)
         logpt = logpt.view(-1)
+        # exp()对数据取指数，因为上面使用了log_softmax函数
         pt = Variable(logpt.data.exp())
 
         if self.alpha is not None:
             if self.alpha.type() != input.data.type():
                 self.alpha = self.alpha.type_as(input.data)
+            # 沿给定轴dim，将输入索引张量index指定位置的值进行聚合。即取出真实类标对应的alpha，at维度为[batch]
             at = self.alpha.gather(0, target.data.view(-1))
             logpt = logpt * Variable(at)
 

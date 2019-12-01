@@ -159,7 +159,7 @@ class TrainVal:
         labels_predict_all, labels_all = np.empty(shape=(0,)), np.empty(shape=(0,))
         epoch_loss = 0
         with torch.no_grad():
-            for i, (images, labels) in enumerate(tbar):
+            for i, (_, images, labels) in enumerate(tbar):
                 # 网络的前向传播
                 labels_predict = self.solver.forward(images)
                 loss = self.solver.cal_loss(labels_predict, labels, self.criterion)

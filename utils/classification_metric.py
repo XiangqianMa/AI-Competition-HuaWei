@@ -122,6 +122,12 @@ class ClassificationMetric:
             with codecs.open(os.path.join(self.save_path, 'result.json'), 'w', "utf-8") as json_file:
                 json.dump(result, json_file, ensure_ascii=False)
 
+            classes_acc = {}
+            for label_name, each_class_acc in zip(self.labels, oa):
+                classes_acc[label_name] = each_class_acc
+            with codecs.open(os.path.join(self.save_path, 'classes_acc.json'), 'w', "utf-8") as json_file:
+                json.dump(classes_acc, json_file, ensure_ascii=False)
+
         if self.show_pic:
             plt.show()
         plt.close('all')

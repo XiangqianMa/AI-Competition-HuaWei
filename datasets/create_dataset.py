@@ -90,10 +90,12 @@ class ValDataset(Dataset):
             index: int, 当前的索引下标
 
         Returns:
+            image_name: str；图片名称
             image: [channel, height, width] tensor, 当前索引下标对应的图像数据
             label: [1] tensor, 当前索引下标对应的图像数据对应的类标
         """
-        sample_path = os.path.join(self.data_root, self.sample_list[index])
+        image_name = self.sample_list[index]
+        sample_path = os.path.join(self.data_root, image_name)
         image = Image.open(sample_path).convert('RGB')
         label = self.label_list[index]
         transform_val_list = [ 
@@ -105,7 +107,7 @@ class ValDataset(Dataset):
         image = transform_compose(image)
         label = torch.tensor(label).long()
 
-        return image, label
+        return image_name, image, label
 
     def __len__(self):
         """ 得到训练数据集总共有多少个样本
