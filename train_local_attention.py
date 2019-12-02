@@ -55,6 +55,7 @@ class TrainVal:
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}  # filter out unnecessary keys
         model_dict.update(pretrained_dict)
         self.model.load_state_dict(model_dict)
+        print('Successfully Loaded from %s' % weight_path)
 
         if torch.cuda.is_available():
             self.model = torch.nn.DataParallel(self.model)
