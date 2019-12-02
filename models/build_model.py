@@ -1,6 +1,7 @@
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from models.custom_model import CustomModel
+from models.custom_attention_model import CustomLocalAttentionModel
 
 
 class PrepareModel:
@@ -13,13 +14,26 @@ class PrepareModel:
     def create_model(self, model_type, classes_num, last_stride, droprate, pretrained=True):
         """创建模型
         Args:
-            model_type: 模型类型
-            last_stride: resnet最后一个下采样层的步长；类型为int
+            model_type: str, 模型类型
+            last_stride: int, resnet最后一个下采样层的步长
             droprate: float, drop rate
-            classes_num: 类别数目
+            classes_num: int, 类别数目
         """
         print('Creating model: {}'.format(model_type))
         model = CustomModel(model_type, classes_num, last_stride, droprate, pretrained=pretrained)
+        return model
+
+    def create_local_attention_model(self, model_type, classes_num, last_stride, droprate, pretrained=True, use_local_attention=True):
+        """创建模型
+        Args:
+            model_type: str, 模型类型
+            last_stride: int, resnet最后一个下采样层的步长
+            droprate: float, drop rate
+            classes_num: int, 类别数目
+            use_local_attention: bool, 是否使用局部attention机制
+        """
+        print('Creating model: {}'.format(model_type))
+        model = CustomLocalAttentionModel(model_type, classes_num, last_stride, droprate, pretrained, use_local_attention)
         return model
 
     def create_optimizer(self, model_type, model, config):
