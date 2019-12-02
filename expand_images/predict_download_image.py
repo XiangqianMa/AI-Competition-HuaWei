@@ -47,9 +47,14 @@ class PredictDownloadImage(object):
             print('Making %s' % save_path)
             os.mkdir(save_path)
         for image_name in tbar:
-            current_thresh = thresh[image_name.split('_')[0]]
+            label = image_name.split('_')[0]
+            if label == '浆水鱼鱼':
+                label = '凉鱼'
+            elif label == '酥饺':
+                label = '蜜饯张口酥饺'
+            current_thresh = thresh[label]
             image_path = os.path.join(samples_root, image_name)
-            index, predict_label, remain = self.predict_single_sample(image_path, thresh=current_thresh)
+            index, predict_label, remain = self.predict_single_sample(label, image_path, thresh=current_thresh)
             if remain:
                 descript = 'Remain: %s' % image_name
                 self.save_image_label(save_path, image_path, image_name, predict_label, index)
@@ -58,10 +63,11 @@ class PredictDownloadImage(object):
             tbar.set_description(desc=descript)
         return predict_results
 
-    def predict_single_sample(self, sample_path, thresh=0.6):
+    def predict_single_sample(self, annotation, sample_path, thresh=0.6):
         """对单张样本进行预测
 
         Args:
+            annotation: 标注的标签
             sample_path: 样本路径
             rank: 返回前rank个预测结果
         Returns:
@@ -85,7 +91,8 @@ class PredictDownloadImage(object):
         index = indexs[-1]
         predict_label = self.label_dict[str(index)]
         score = predicts_numpy[index]
-        if score > thresh:
+        # 得分大于阈值且预测出的标签和标注的标签相同时保留
+        if score > thresh and predict_label.split('/')[1] == annotation:
             remain = True
         else:
             remain = False
@@ -140,18 +147,18 @@ def compute_labels_thresh(labels_scores, thresh_max=0.95, thresh_min=0.85):
     labels_thresh = {}
     for label, score in labels_scores.items():
         thresh = (max_score - score) / (max_score - min_score) * (thresh_max - thresh_min) + thresh_min
-        labels_thresh[label] = thresh
+        labels_thresh[label.split('/')[1]] = thresh
     
     return labels_thresh
 
 
 if __name__ == "__main__":
     config = get_classify_config()
-    weight_path = 'checkpoints/resnet50/log-2019-11-23T20-33-13-加入新数据-0.9360/model_best.pth'
+    weight_path = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T00-26-26/model_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
-    samples_root = '/media/mxq/data/competition/HuaWei/download_image'
-    save_path = '/media/mxq/data/competition/HuaWei/psudeo_image'
-    labels_score_file = ''
+    samples_root = '/media/mxq/data/competition/HuaWei/酥饺'
+    save_path = '/media/mxq/data/competition/HuaWei/酥饺-伪标签'
+    labels_score_file = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T00-26-26/classes_acc.json'
 
     thresh_max = 0.95
     thresh_min = 0.85
@@ -160,5 +167,6 @@ if __name__ == "__main__":
     with open(labels_score_file, 'r') as f:
         labels_score = json.load(f)
     labels_thresh = compute_labels_thresh(labels_score, thresh_max, thresh_min)
+    print(labels_thresh)
     predict_download_images = PredictDownloadImage(config.model_type, config.num_classes, weight_path, config.image_size, label_json_path, mean=mean, std=std)
     predict_download_images.predict_multi_smaples(samples_root, thresh=labels_thresh, save_path=save_path)

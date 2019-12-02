@@ -7,6 +7,8 @@ import urllib
 import requests
 from utils.data_analysis import DatasetStatistic
 import json
+import threading
+import concurrent.futures
 
 
 def get_onepage_urls(onepageurl):
@@ -44,27 +46,31 @@ def down_pic(pic_urls, key_word, save_path):
             continue
 
 
-if __name__ == '__main__':
-    save_path = '/media/mxq/data/competition/HuaWei/download_image'
-    label_json_path = 'data/huawei_data/label_id_name.json'
-    page_number = 10
-    with open(label_json_path, 'r') as f:
-        label = json.load(f).values()
-    for keyword in label:
-        keyword = keyword.split('/')[1]
-        url_init_first = r'http://image.baidu.com/search/flip?tn=baiduimage&ipn=r&ct=201326592&cl=2&lm=-1&st=-1&fm=result&fr=&sf=1&fmq=1497491098685_R&pv=&ic=0&nc=1&z=&se=1&showtab=0&fb=0&width=&height=&face=0&istype=2&ie=utf-8&ctd=1497491098685%5E00_1519X735&word='
-        url_init = url_init_first + urllib.parse.quote(keyword, safe='/')
-        all_pic_urls = []
-        onepage_urls, fanye_url = get_onepage_urls(url_init)
+def download_images_keyword(keyword, page_number=20):
+    url_init_first = r'http://image.baidu.com/search/flip?tn=baiduimage&ipn=r&ct=201326592&cl=2&lm=-1&st=-1&fm=result&fr=&sf=1&fmq=1497491098685_R&pv=&ic=0&nc=1&z=&se=1&showtab=0&fb=0&width=&height=&face=0&istype=2&ie=utf-8&ctd=1497491098685%5E00_1519X735&word='
+    url_init = url_init_first + urllib.parse.quote(keyword, safe='/')
+    all_pic_urls = []
+    onepage_urls, fanye_url = get_onepage_urls(url_init)
+    all_pic_urls.extend(onepage_urls)
+
+    fanye_count = 0  # 累计翻页数
+    while fanye_count < page_number:
+        onepage_urls, fanye_url = get_onepage_urls(fanye_url)
+        fanye_count += 1
+        if fanye_url == '' and onepage_urls == []:
+            break
         all_pic_urls.extend(onepage_urls)
 
-        fanye_count = 0  # 累计翻页数
-        while fanye_count < page_number:
-            onepage_urls, fanye_url = get_onepage_urls(fanye_url)
-            fanye_count += 1
-            print('第%s页' % str(fanye_count))
-            if fanye_url == '' and onepage_urls == []:
-                break
-            all_pic_urls.extend(onepage_urls)
+    down_pic(list(set(all_pic_urls)), keyword, save_path)
+    
 
-        down_pic(list(set(all_pic_urls)), keyword, save_path)
+if __name__ == '__main__':
+    save_path = '/media/mxq/data/competition/HuaWei/酥饺'
+    label_json_path = 'data/huawei_data/label_id_name.json'
+    with open(label_json_path, 'r') as f:
+        label = json.load(f).values()
+    keywords = [keyword.split('/')[1] for keyword in label]
+    keywords = ['酥饺', '浆水鱼鱼']
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+        executor.map(download_images_keyword, keywords)
+

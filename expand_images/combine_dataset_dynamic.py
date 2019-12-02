@@ -22,7 +22,7 @@ def combine_dataset(download_root, official_root, combine_root, labels_to_comple
     download_files = os.listdir(download_root)
     tbar = tqdm.tqdm(labels_to_complement_number.items())
     for label, number in tbar:
-        files_name = [file_name for file_name in download_files if label in file_name]
+        files_name = [file_name for file_name in download_files if label.split('/')[1] in file_name]
         selected_number = int(min(number, len(files_name)/2))
         selected_sample_files = random.sample(
             [file_name for file_name in files_name if file_name.endswith('jpg')],
@@ -66,36 +66,19 @@ def calculate_complement_number(labels_scores, max_number, min_number):
 if __name__ == "__main__":
     data_root = 'data/huawei_data/train_data'
     download_root = 'data/huawei_data/pesudeo_image'
-    combine_root = '/media/mxq/data/competition/HuaWei/combine_complement'
+    combine_root = 'data/huawei_data/combine_complement'
     label_id_json = 'data/huawei_data/label_id_name.json'
+    score_file = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T00-26-26/classes_acc.json'
     with open(label_id_json, 'r') as f:
         labels = json.load(f).values()
     labels = [label.split('/')[1] for label in labels]
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
     # 最少补充样本数
-    min_complement_number = 30
+    min_complement_number = 50
     # 最多补充样本数
-    max_complement_number = 90
-    labels_scores = {
-        '仿唐三彩': 0.95,
-        '景泰蓝': 0.95,
-        '葡萄花鸟纹银香囊': 0.90,
-        '西安剪纸': 0.91,
-        '陕历博唐妞系列': 0.95,
-        '水陆庵壁塑': 0.88,
-        '汉长安城遗址': 0.86,
-        '玉器': 0.91,
-        '阎良甜瓜': 0.93,
-        '凉鱼': 0.86,
-        '羊肉泡馍': 0.95,
-        '搅团': 0.75,
-        '浆水面': 0.78,
-        '神仙粉': 0.88,
-        '荞面饸饹': 0.93,
-        '蜂蜜凉粽子': 0.91,
-        '醪糟': 0.92,
-        '金线油塔': 0.94,
-    }
+    max_complement_number = 120
+    with open(score_file, 'r') as f:
+        labels_scores = json.load(f)
     labels_to_complement_number = calculate_complement_number(labels_scores, max_complement_number, min_complement_number)
     print(labels_to_complement_number)
     combine_dataset(download_root, data_root, combine_root, labels_to_complement_number)
