@@ -99,6 +99,8 @@ class PredictDownloadImage(object):
                 remain = False
         except:
             remain = False
+            index = -1
+            predict_label = -1
 
         return index, predict_label, remain
 
