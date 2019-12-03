@@ -107,7 +107,7 @@ class DatasetStatistic:
 
 
 if __name__ == '__main__':
-    data_root = '/media/mxq/data/competition/HuaWei/combine'
+    data_root = 'data/huawei_data/combine_complement'
     label_id_json = 'data/huawei_data/label_id_name.json'
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
     dataset_statistic.show_label_number_distr()

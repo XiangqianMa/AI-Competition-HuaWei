@@ -46,20 +46,20 @@ class PrepareModel:
         Return:
             optimizer: 优化器
         """
-        ignored_params = list(map(id, model.classifier.parameters()))
-        base_params = filter(lambda p: id(p) not in ignored_params, model.parameters())        
+        ignored_params = list(map(id, model.module.classifier.parameters()))
+        base_params = filter(lambda p: id(p) not in ignored_params, model.module.parameters())        
         print('Creating optimizer: %s' % config.optimizer)
         if config.optimizer == 'Adam':
             optimizer = optim.Adam(
                 [
-                    {'params': base_params, 'lr': 0.1 * config.lr},
-                    {'params': model.classifier.parameters(), 'lr': config.lr}
+                    {'params': base_params, 'lr': 1.0 * config.lr},
+                    {'params': model.module.classifier.parameters(), 'lr': config.lr}
                 ], weight_decay=config.weight_decay)
         elif config.optimizer == 'SGD':
             optimizer = optim.SGD(
                 [
-                    {'params': base_params, 'lr': 0.1 * config.lr},
-                    {'params': model.classifier.parameters(), 'lr': config.lr}
+                    {'params': base_params, 'lr': 1.0 * config.lr},
+                    {'params': model.module.classifier.parameters(), 'lr': config.lr}
                 ], weight_decay=config.weight_decay, momentum=0.9)
 
         return optimizer

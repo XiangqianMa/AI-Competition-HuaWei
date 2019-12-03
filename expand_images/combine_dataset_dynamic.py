@@ -65,7 +65,7 @@ def calculate_complement_number(labels_scores, max_number, min_number):
 
 if __name__ == "__main__":
     data_root = 'data/huawei_data/train_data'
-    download_root = 'data/huawei_data/pesudeo_image'
+    download_root = 'data/huawei_data/psudeo_images_dynamic'
     combine_root = 'data/huawei_data/combine_complement'
     label_id_json = 'data/huawei_data/label_id_name.json'
     score_file = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T00-26-26/classes_acc.json'
@@ -74,9 +74,9 @@ if __name__ == "__main__":
     labels = [label.split('/')[1] for label in labels]
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
     # 最少补充样本数
-    min_complement_number = 50
+    min_complement_number = 30
     # 最多补充样本数
-    max_complement_number = 120
+    max_complement_number = 80
     with open(score_file, 'r') as f:
         labels_scores = json.load(f)
     labels_to_complement_number = calculate_complement_number(labels_scores, max_complement_number, min_complement_number)

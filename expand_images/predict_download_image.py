@@ -75,26 +75,29 @@ class PredictDownloadImage(object):
             label: 真实类标，如：大雁塔
             remain: bool, True: 保留， False: 不保留
         """
-        image = Image.open(sample_path).convert('RGB')
-        transforms = T.Compose([
-            T.Resize(self.image_size),
-            T.ToTensor(),
-            T.Normalize(self.mean, self.std)
-        ])
-        image = transforms(image)
-        image = torch.unsqueeze(image, dim=0).cuda()
-        output = self.model(image)
-        output = torch.squeeze(output)
-        predicts = F.softmax(output)
-        predicts_numpy = predicts.cpu().detach().numpy()
-        indexs = np.argsort(predicts_numpy)
-        index = indexs[-1]
-        predict_label = self.label_dict[str(index)]
-        score = predicts_numpy[index]
-        # 得分大于阈值且预测出的标签和标注的标签相同时保留
-        if score > thresh and predict_label.split('/')[1] == annotation:
-            remain = True
-        else:
+        try:
+            image = Image.open(sample_path).convert('RGB')
+            transforms = T.Compose([
+                T.Resize(self.image_size),
+                T.ToTensor(),
+                T.Normalize(self.mean, self.std)
+            ])
+            image = transforms(image)
+            image = torch.unsqueeze(image, dim=0).cuda()
+            output = self.model(image)
+            output = torch.squeeze(output)
+            predicts = F.softmax(output)
+            predicts_numpy = predicts.cpu().detach().numpy()
+            indexs = np.argsort(predicts_numpy)
+            index = indexs[-1]
+            predict_label = self.label_dict[str(index)]
+            score = predicts_numpy[index]
+            # 得分大于阈值且预测出的标签和标注的标签相同时保留
+            if score > thresh and predict_label.split('/')[1] == annotation:
+                remain = True
+            else:
+                remain = False
+        except:
             remain = False
 
         return index, predict_label, remain
@@ -154,13 +157,13 @@ def compute_labels_thresh(labels_scores, thresh_max=0.95, thresh_min=0.85):
 
 if __name__ == "__main__":
     config = get_classify_config()
-    weight_path = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T00-26-26/model_best.pth'
+    weight_path = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T16-17-25-0.9640/model_best.pth'
     label_json_path = 'data/huawei_data/label_id_name.json'
-    samples_root = '/media/mxq/data/competition/HuaWei/酥饺'
-    save_path = '/media/mxq/data/competition/HuaWei/酥饺-伪标签'
-    labels_score_file = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T00-26-26/classes_acc.json'
+    samples_root = '/media/mxq/data/competition/HuaWei/下载的图片/download_images_huge'
+    save_path = '/media/mxq/data/competition/HuaWei/下载的图片/psudeo_image_huge'
+    labels_score_file = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T16-17-25-0.9640/classes_acc.json'
 
-    thresh_max = 0.95
+    thresh_max = 0.97
     thresh_min = 0.85
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
