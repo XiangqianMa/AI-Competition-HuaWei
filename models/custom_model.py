@@ -43,7 +43,7 @@ class CustomModel(nn.Module):
             if pretrained:
                 pretrained_type = 'imagenet'
             else:
-                pretrained_type = None           
+                pretrained_type = None
             model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
             in_features = model.last_linear.in_features
             self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
@@ -53,8 +53,19 @@ class CustomModel(nn.Module):
             if pretrained:
                 pretrained_type = 'imagenet'
             else:
-                pretrained_type = None            
+                pretrained_type = None
             model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
+            # # 替换前面的7x7卷积层+MaxPool2d层为两层3x3的卷积层
+            # model.layer0 = nn.Sequential(*[nn.Conv2d(3, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1)),
+            #                                nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True,
+            #                                               track_running_stats=True),
+            #                                nn.ReLU(inplace=True),
+            #                                nn.Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2),
+            #                                          padding=(1, 1)),
+            #                                nn.BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True,
+            #                                               track_running_stats=True),
+            #                                nn.ReLU(inplace=True),
+            #                                ])
             model.avg_pool = torch.nn.AdaptiveAvgPool2d(output_size=(1, 1))
             in_features = model.last_linear.in_features
             self.feature_layer = torch.nn.Sequential(*list(model.children())[:-1])
@@ -95,6 +106,6 @@ class CustomModel(nn.Module):
 
 if __name__ == '__main__':
     inputs = torch.rand((64, 3, 224, 224))
-    custom_model = CustomModel('densenet201', num_classes=40)
+    custom_model = CustomModel('se_resnext101_32x4d', num_classes=40)
     scores = custom_model(inputs)
     print(scores.size())

@@ -107,7 +107,7 @@ class CustomLocalAttentionModel(nn.Module):
             in_features = model.last_linear.in_features
             self.feature_layer = torch.nn.Sequential(*list(model.children())[:-2])
 
-        self.avg_pool = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.avg_pool = nn.AdaptiveMaxPool2d(output_size=(1, 1))
 
         # 若使用局部注意力机制
         if self.use_local_attention:
@@ -160,6 +160,6 @@ class CustomLocalAttentionModel(nn.Module):
 
 if __name__ == '__main__':
     inputs = torch.rand((64, 3, 224, 224))
-    custom_model = CustomModel('resnet50', num_classes=40, pretrained=False, use_local_attention=True)
+    custom_model = CustomLocalAttentionModel('resnet50', num_classes=40, pretrained=False, use_local_attention=True)
     scores = custom_model(inputs)
     print(scores.size())
