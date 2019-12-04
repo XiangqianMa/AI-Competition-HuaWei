@@ -3,6 +3,7 @@ import torch.nn as nn
 import pretrainedmodels
 import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
+import models.resnext as resnext
 
 
 class CustomModel(nn.Module):
@@ -21,6 +22,8 @@ class CustomModel(nn.Module):
                 self.model = EfficientNet.from_pretrained(self.model_name, num_classes=self.num_classes)
             else:
                 self.model = EfficientNet.from_name(self.model_name, override_params={'num_classes': self.num_classes})
+        elif self.model_name in ['resnext101_32x8d_wsl', 'resnext101_32x16d_wsl', 'resnext101_32x32d_wsl', 'resnext101_32x48d_wsl']:
+            self.model = getattr(resnext, self.model_name)(self.num_classes, pretrained=pretrained)
         else:
             if pretrained:
                 pretrained_type = 'imagenet'
@@ -58,6 +61,6 @@ class CustomModel(nn.Module):
 
 if __name__ == '__main__':
     inputs = torch.rand((64, 3, 224, 224))
-    custom_model = CustomModel('efficientnet-b5', num_classes=54, pretrained=False)
+    custom_model = CustomModel('resnext101_32x8d_wsl', num_classes=54, pretrained=True)
     scores = custom_model(inputs)
     print(scores.size())

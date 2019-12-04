@@ -1,7 +1,7 @@
 import torch.optim as optim
 from torch.optim import lr_scheduler
-from models.deploy_models.custom_model import CustomModel
-from models.deploy_models.custom_attention_model import CustomLocalAttentionModel
+from model.deploy_models.custom_model import CustomModel
+from model.deploy_models.custom_attention_model import CustomLocalAttentionModel
 
 
 class PrepareModel:
