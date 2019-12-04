@@ -16,10 +16,10 @@ def get_classify_config():
     parser.add_argument('--n_splits', type=int, default=5, help='n_splits_fold')
     parser.add_argument('--selected_fold', type=list, default=[0], help='which folds for training')
     parser.add_argument('--val_size', type=float, default=0.2, help='the ratio of val data when n_splits=1.')
+
     # model set 
-    parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d', help='resnet50/se_resnext101_32x4d')
-    parser.add_argument('--last_stride', type=int, default=2, help='last stride in the resnet model')
-    parser.add_argument('--droprate', type=float, default=0, help='dropout rate in classify module')
+    parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d',
+                        help='densenet201/efficientnet-b5/se_resnext101_32x4d')
 
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
@@ -35,7 +35,7 @@ def get_classify_config():
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type')
     # 损失函数
     parser.add_argument('--loss_name', type=str, default='1.0*SmoothCrossEntropy',
-                        help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss/0.75*SmoothCrossEntropy+0.25*FocalLoss')
+                        help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss')
 
     # 路径
     parser.add_argument('--save_path', type=str, default='./checkpoints')

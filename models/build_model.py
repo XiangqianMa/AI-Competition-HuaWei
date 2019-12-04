@@ -11,25 +11,26 @@ class PrepareModel:
     def __init__(self):
         pass
 
-    def create_model(self, model_type, classes_num, last_stride, droprate, pretrained=True):
+    def create_model(self, model_type, classes_num, pretrained=True):
         """创建模型
         Args:
             model_type: str, 模型类型
-            last_stride: int, resnet最后一个下采样层的步长
-            droprate: float, drop rate
             classes_num: int, 类别数目
+            pretrained: bool, 是否使用预训练模型
         """
         print('Creating model: {}'.format(model_type))
-        model = CustomModel(model_type, classes_num, last_stride, droprate, pretrained=pretrained)
+        model = CustomModel(model_type, classes_num, pretrained=pretrained)
         return model
 
-    def create_local_attention_model(self, model_type, classes_num, last_stride, droprate, pretrained=True, use_local_attention=True):
+    def create_local_attention_model(self, model_type, classes_num, last_stride=2, droprate=0,
+                                     pretrained=True, use_local_attention=True):
         """创建模型
         Args:
             model_type: str, 模型类型
+            classes_num: int, 类别数目
             last_stride: int, resnet最后一个下采样层的步长
             droprate: float, drop rate
-            classes_num: int, 类别数目
+            pretrained: bool, 是否使用预训练模型
             use_local_attention: bool, 是否使用局部attention机制
         """
         print('Creating model: {}'.format(model_type))

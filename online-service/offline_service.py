@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 from PIL import Image
-from collections import OrderedDict
-
-import os
 import torch
 import torch.nn.functional as F
-import torchvision.models as models
 import torchvision.transforms as transforms
 import time
 import logging
@@ -165,7 +161,7 @@ class ImageClassificationService:
         """准备模型
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model('se_resnext101_32x4d', self.classes_num, last_stride=1, droprate=0, pretrained=False)
+        model = prepare_model.create_model('se_resnext101_32x4d', self.classes_num, pretrained=False)
 
         print('Using CPU for inference')
         checkpoint = torch.load(self.model_path, map_location='cpu')

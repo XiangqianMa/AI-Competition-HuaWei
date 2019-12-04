@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 from PIL import Image
-from collections import OrderedDict
-
-import os
 import torch
 import torch.nn.functional as F
-import torchvision.models as models
 import torchvision.transforms as transforms
 from model_service.pytorch_model_service import PTServingBaseService
 import time
@@ -171,7 +167,7 @@ class ImageClassificationService(PTServingBaseService):
         """准备模型
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model('se_resnext101_32x4d', self.classes_num, last_stride=2, droprate=0, pretrained=False)
+        model = prepare_model.create_model('se_resnext101_32x4d', self.classes_num, pretrained=False)
 
         if torch.cuda.is_available():
             logger.info('Using GPU for inference')

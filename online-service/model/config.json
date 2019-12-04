@@ -62,7 +62,10 @@
                 },
                 {
                     "package_name": "pretrainedmodels"
-                }                  
+                },
+                {
+                    "package_name": "efficientnet_pytorch"
+                }
             ]
         }
     ]
