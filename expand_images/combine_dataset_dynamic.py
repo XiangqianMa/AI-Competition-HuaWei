@@ -65,20 +65,20 @@ def calculate_complement_number(labels_scores, max_number, min_number):
 
 if __name__ == "__main__":
     data_root = 'data/huawei_data/train_data'
-    download_root = 'data/huawei_data/psudeo_images_dynamic'
-    combine_root = 'data/huawei_data/combine_complement'
+    download_root = '/media/mxq/data/competition/HuaWei/psudeo_image_huge'
+    combine_root = '/media/mxq/data/competition/HuaWei/combine_huge'
     label_id_json = 'data/huawei_data/label_id_name.json'
     score_file = 'checkpoints/se_resnext101_32x4d/log-2019-12-02T00-26-26/classes_acc.json'
     with open(label_id_json, 'r') as f:
         labels = json.load(f).values()
     labels = [label.split('/')[1] for label in labels]
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
-    # 最少补充样本数
-    min_complement_number = 30
-    # 最多补充样本数
-    max_complement_number = 80
-    with open(score_file, 'r') as f:
-        labels_scores = json.load(f)
-    labels_to_complement_number = calculate_complement_number(labels_scores, max_complement_number, min_complement_number)
+    thresh = 100
+    # 高于样本数目阈值的类别的补充数目
+    more_than_thresh_number = 20
+    # 低于样本数目阈值的类别的补充数目
+    less_than_thresh_number = 100
+    # 依据官方数据计算各个类别补充样本的数目
+    labels_to_complement_number = dataset_statistic.get_expand_number(thresh, more_than_thresh_number, less_than_thresh_number)
     print(labels_to_complement_number)
     combine_dataset(download_root, data_root, combine_root, labels_to_complement_number)

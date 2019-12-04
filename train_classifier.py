@@ -32,6 +32,7 @@ class TrainVal:
         self.epoch = config.epoch
         self.num_classes = config.num_classes
         self.lr_scheduler = config.lr_scheduler
+        self.save_interval = 10
         print('USE LOSS: {}'.format(config.loss_name))
 
         # 加载模型
@@ -83,7 +84,6 @@ class TrainVal:
             valid_loader: 验证数据的Dataloader
         """
         global_step = 0
-        max_accuracy_valid = 0
         for epoch in range(self.epoch):
             self.model.train()
             epoch += 1
@@ -131,7 +131,7 @@ class TrainVal:
             state = {
                 'epoch': epoch,
                 'state_dict': self.model.module.state_dict(),
-                'max_score': max_accuracy_valid
+                'max_score': self.max_accuracy_valid
             }
             self.solver.save_checkpoint(
                 os.path.join(
@@ -141,6 +141,16 @@ class TrainVal:
                 state,
                 is_best
             )
+
+            if epoch % self.save_interval == 0:
+                self.solver.save_checkpoint(
+                    os.path.join(
+                        self.model_path,
+                        '%s_epoch%d_fold%d.pth' % (self.config.model_type, epoch, self.fold)
+                    ),
+                    state,
+                    False
+                )
 
             # 写到tensorboard中
             self.writer.add_scalar('ValidLoss', val_loss, epoch)
@@ -152,6 +162,7 @@ class TrainVal:
             else:
                 self.exp_lr_scheduler.step()
             global_step += len(train_loader)
+        print('BEST ACC:{}'.format(self.max_accuracy_valid))
 
     def validation(self, valid_loader):
         tbar = tqdm.tqdm(valid_loader)

@@ -2,6 +2,7 @@ import os
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 from matplotlib.font_manager import FontProperties
 
 
@@ -17,23 +18,35 @@ class DatasetStatistic:
         self.data_root = data_root
         self.label_id_json = label_id_json
     
-    def get_download_number(self):
-        """获取每一类别需要额外下载的样本数目
+    def get_expand_number(self, thresh, more_than_thresh_number, less_than_thresh_number):
+        """获取每一类别需要额外补充的样本数目
 
+        Args:
+            thresh: 样本数目阈值
+            more_than_thresh_number: 大于thresh的类别的补充数目
+            less_than_thresh_number: 小于thresh的类别的补充数目
         Returns:
-            name_dowmload_number: dir, {'大雁塔‘： 10, ...}
+            name_expand_number: dir, {'大雁塔‘： 10, ...}
         """
         labels_number = self.get_label_number()
-        all_number = np.asarray(list(labels_number.values()))
-        max_number = np.max(all_number)
         label_to_name = self.get_label_to_name()
-        name_download_number = {}
+        name_expand_number = {}
         for (label, number) in labels_number.items():
-            download_number = (max_number - number) + 10
-            name = label_to_name[str(label)]
-            name_download_number[name.split('/')[1]] = download_number
+            if number > thresh or number == thresh:
+                name_expand_number[str(label_to_name[str(label)])] = more_than_thresh_number
+            else:
+                name_expand_number[str(label_to_name[str(label)])] = (less_than_thresh_number - number) + random.sample([5, 10, 15], 1)[0]
         
-        return name_download_number
+        return name_expand_number
+
+    def get_name_less_than_thresh(self, thresh):
+        labels_number = self.get_label_number()
+        label_to_name = self.get_label_to_name()
+        names = []
+        for label, number in labels_number.items():
+            if number < thresh:
+                names.append(label_to_name[str(label)])
+        return names
 
     def get_label_number(self):
         """得到每一个类别对应的样本数目
@@ -107,8 +120,10 @@ class DatasetStatistic:
 
 
 if __name__ == '__main__':
-    data_root = 'data/huawei_data/combine_complement'
+    data_root = '/media/mxq/data/competition/HuaWei/combine_huge'
     label_id_json = 'data/huawei_data/label_id_name.json'
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
     dataset_statistic.show_label_number_distr()
+    # names = dataset_statistic.get_name_less_than_thresh(100)
+    # print(names)
     pass

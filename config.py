@@ -23,7 +23,7 @@ def get_classify_config():
 
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
-    parser.add_argument('--lr', type=float, default=1e-2, help='init lr')
+    parser.add_argument('--lr', type=float, default=3e-4, help='init lr')
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
     # 学习率衰减策略
     parser.add_argument('--lr_scheduler', type=str, default='StepLR',
@@ -32,7 +32,7 @@ def get_classify_config():
     parser.add_argument('--restart_step', type=int, default=80, help='T_max for CosineAnnealingLR scheduler')
     parser.add_argument('--multi_step', type=list, default=[20, 35, 45], help='Milestone of multi_step')
     # 优化器
-    parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type')
+    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type')
     # 损失函数
     parser.add_argument('--loss_name', type=str, default='1.0*SmoothCrossEntropy',
                         help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss/0.75*SmoothCrossEntropy+0.25*FocalLoss')
