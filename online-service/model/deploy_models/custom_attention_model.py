@@ -55,12 +55,12 @@ class WeightedSum2d(nn.Module):
 
 
 class CustomLocalAttentionModel(nn.Module):
-    def __init__(self, model_name, num_classes, last_stride=2, droprate=0, pretrained=True, use_local_attention=False):
+    def __init__(self, model_name, num_classes, last_stride=2, drop_rate=0, pretrained=True, use_local_attention=False):
         """
         Args:
             model_name: model_name: resnet模型的名称；类型为str
             last_stride: resnet模型最后一个下采样层的步长；类型为int
-            droprate: float, drop rate
+            drop_rate: float, drop rate
             num_classes: num_classes: 类别数目；类型为int
             use_local_attention, bool, 是否使用局部注意力机制
         """
@@ -126,8 +126,8 @@ class CustomLocalAttentionModel(nn.Module):
             self.weights_sum = WeightedSum2d()
 
         add_block = [nn.Linear(in_features, 1024), nn.ReLU()]
-        if droprate > 0:
-            add_block += [nn.Dropout(p=droprate)]
+        if drop_rate > 0:
+            add_block += [nn.Dropout(p=drop_rate)]
         add_block += [nn.Linear(1024, self.num_classes)]
         self.classifier = nn.Sequential(*add_block)
 

@@ -11,30 +11,31 @@ class PrepareModel:
     def __init__(self):
         pass
 
-    def create_model(self, model_type, classes_num, pretrained=True):
+    def create_model(self, model_type, classes_num, drop_rate=0, pretrained=True):
         """创建模型
         Args:
             model_type: str, 模型类型
             classes_num: int, 类别数目
+            drop_rate: float, 分类层中的drop out系数
             pretrained: bool, 是否使用预训练模型
         """
         print('Creating model: {}'.format(model_type))
-        model = CustomModel(model_type, classes_num, pretrained=pretrained)
+        model = CustomModel(model_type, classes_num, drop_rate=drop_rate, pretrained=pretrained)
         return model
 
-    def create_local_attention_model(self, model_type, classes_num, last_stride=2, droprate=0,
+    def create_local_attention_model(self, model_type, classes_num, last_stride=2, drop_rate=0,
                                      pretrained=True, use_local_attention=True):
         """创建模型
         Args:
             model_type: str, 模型类型
             classes_num: int, 类别数目
             last_stride: int, resnet最后一个下采样层的步长
-            droprate: float, drop rate
+            drop_rate: float, drop rate
             pretrained: bool, 是否使用预训练模型
             use_local_attention: bool, 是否使用局部attention机制
         """
         print('Creating model: {}'.format(model_type))
-        model = CustomLocalAttentionModel(model_type, classes_num, last_stride, droprate, pretrained, use_local_attention)
+        model = CustomLocalAttentionModel(model_type, classes_num, last_stride, drop_rate, pretrained, use_local_attention)
         return model
 
     def create_optimizer(self, model_type, model, config):
@@ -48,7 +49,7 @@ class PrepareModel:
             optimizer: 优化器
         """
         ignored_params = list(map(id, model.module.classifier.parameters()))
-        base_params = filter(lambda p: id(p) not in ignored_params, model.module.parameters())
+        base_params = filter(lambda p: id(p) not in ignored_params and p.requires_grad, model.module.parameters())
         print('Creating optimizer: %s' % config.optimizer)
         if config.optimizer == 'Adam':
             optimizer = optim.Adam(

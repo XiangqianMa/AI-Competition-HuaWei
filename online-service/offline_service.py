@@ -161,7 +161,7 @@ class ImageClassificationService:
         """准备模型
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model('se_resnext101_32x4d', self.classes_num, pretrained=False)
+        model = prepare_model.create_model('se_resnext101_32x4d', self.classes_num, drop_rate=0, pretrained=False)
 
         print('Using CPU for inference')
         checkpoint = torch.load(self.model_path, map_location='cpu')

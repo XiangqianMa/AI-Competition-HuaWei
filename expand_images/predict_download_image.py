@@ -124,7 +124,7 @@ class PredictDownloadImage(object):
 
     def __prepare__(self, label_json_path):
         prepare_model = PrepareModel()
-        model = prepare_model.create_model(self.model_type, self.classes_num, pretrained=False)
+        model = prepare_model.create_model(self.model_type, self.classes_num, 0, pretrained=False)
         model.load_state_dict(torch.load(self.weight_path)['state_dict'])
         model = model.cuda()
         model.eval()

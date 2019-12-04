@@ -40,6 +40,7 @@ class TrainVal:
         self.model = prepare_model.create_model(
             model_type=config.model_type,
             classes_num=self.num_classes,
+            drop_rate=config.drop_rate,
             pretrained=True
         )
         if torch.cuda.is_available():

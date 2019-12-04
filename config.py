@@ -20,6 +20,7 @@ def get_classify_config():
     # model set 
     parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d',
                         help='densenet201/efficientnet-b5/se_resnext101_32x4d')
+    parser.add_argument('--drop_rate', type=float, default=0, help='dropout rate in classify module')
 
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
