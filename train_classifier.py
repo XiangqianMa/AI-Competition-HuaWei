@@ -40,8 +40,7 @@ class TrainVal:
         self.model = prepare_model.create_model(
             model_type=config.model_type,
             classes_num=self.num_classes,
-            last_stride=config.last_stride,
-            droprate=config.droprate
+            pretrained=True
         )
         if torch.cuda.is_available():
             self.model = torch.nn.DataParallel(self.model)

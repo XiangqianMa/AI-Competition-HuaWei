@@ -39,8 +39,8 @@ class TrainVal:
         self.model = prepare_model.create_local_attention_model(
             model_type=config.model_type,
             classes_num=self.num_classes,
-            last_stride=config.last_stride,
-            droprate=config.droprate
+            last_stride=2,
+            droprate=0
         )
 
         # 得到最新产生的权重文件

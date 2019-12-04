@@ -122,7 +122,7 @@ class DemoResults(object):
             label_dict: dict，类标名称与类标之间的对应关系
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model(self.model_type, self.classes_num, self.last_stride, self.drop_rate)
+        model = prepare_model.create_model(self.model_type, self.classes_num, pretrained=False)
         model.load_state_dict(torch.load(self.weight_path)['state_dict'])
         print('Successfully Loaded from %s' % self.weight_path)
         model = model.cuda()
