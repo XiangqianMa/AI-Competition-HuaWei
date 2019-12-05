@@ -1,7 +1,7 @@
-bucket_name=ai-competition-$USER
-model=se_resnext101_32x4d
+bucket_name=ai-competition-$USER # zhangxin
+model_name=se_resnext101_32x4d
 
-filename=`ls -l ../checkpoints/${model} | tail -n 1 | awk '{print $9}'`
+filename=`ls -l ../checkpoints/${model_name} | tail -n 1 | awk '{print $9}'`
 
 if [ $1 -eq 0 ]; then
     # 创建新的bucket
@@ -18,8 +18,8 @@ if [ $1 -eq -1 ]; then
 fi
 
 if [ $1 -eq 1 ]; then
-  echo move ../checkpoints/${model}/${filename}/model_best.pth
-  cp ../checkpoints/${model}/${filename}/model_best.pth model
+  echo move ../checkpoints/${model_name}/${filename}/model_best.pth
+  cp ../checkpoints/${model_name}/${filename}/model_best.pth model
 fi
 
 # 上传model文件夹，并且采用增量上传的方式，上传每个文件时会对比桶中对应路径的对象，仅在对象不存在，

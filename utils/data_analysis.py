@@ -1,8 +1,8 @@
 import os
 import json
-import numpy as np
 import matplotlib.pyplot as plt
 import random
+import imagesize
 from matplotlib.font_manager import FontProperties
 
 
@@ -54,8 +54,8 @@ class DatasetStatistic:
         Returns:
             labels_number: dir {1: 256, 2:125, ...}
         """
-        images = self.get_images()
-        labels = [self.get_label(os.path.join(self.data_root, image)) for image in images]
+        image_names = self.get_image_names()
+        labels = [self.get_label(os.path.join(self.data_root, image_name)) for image_name in image_names]
         labels_number = {}
         for label in labels:
             if label in labels_number.keys():
@@ -90,12 +90,12 @@ class DatasetStatistic:
         mng.window.showMaximized()        
         plt.show()
             
-    def get_images(self):
+    def get_image_names(self):
         """得到所用样本名称
         """
         files = os.listdir(self.data_root)
-        images = list(filter(lambda x: x.endswith('jpg'), files))
-        return images
+        images_names = list(filter(lambda x: x.endswith('jpg'), files))
+        return images_names
 
     def get_label(self, image_name):
         """得到图片对应的类标
@@ -118,12 +118,34 @@ class DatasetStatistic:
             label_to_name = json.load(f)
         return label_to_name
 
+    def show_image_aspect_ratio_distr(self):
+        """得到样本长宽比
+        """
+        aspect_ratio_dict = {}
+
+        image_names = self.get_image_names()
+        for image_name in image_names:
+            sample_path = os.path.join(self.data_root, image_name)
+            width, height = imagesize.get(sample_path)
+            aspect_ratio = width/height
+            if aspect_ratio in aspect_ratio_dict:
+                aspect_ratio_dict[aspect_ratio] += 1
+            else:
+                aspect_ratio_dict[aspect_ratio] = 0
+
+        aspect_ratio_dict_filt = {}
+        for key, value in aspect_ratio_dict.items():
+            if value > 100:
+                aspect_ratio_dict_filt[key] = value
+        del aspect_ratio_dict
+        plt.bar(aspect_ratio_dict_filt.keys(), aspect_ratio_dict_filt.values())
+        plt.show()
+
 
 if __name__ == '__main__':
-    data_root = '/media/mxq/data/competition/HuaWei/combine_huge'
+    data_root = 'data/huawei_data/train_data'
     label_id_json = 'data/huawei_data/label_id_name.json'
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
-    dataset_statistic.show_label_number_distr()
+    dataset_statistic.show_image_aspect_ratio_distr()
     # names = dataset_statistic.get_name_less_than_thresh(100)
     # print(names)
-    pass
