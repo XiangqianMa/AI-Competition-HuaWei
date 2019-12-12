@@ -5,6 +5,8 @@ import os
 import pickle
 import time
 import numpy as np
+import random
+import shutil
 import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 import json
@@ -18,6 +20,8 @@ from datasets.create_dataset import GetDataloader
 from losses.get_loss import Loss
 from utils.classification_metric import ClassificationMetric
 from datasets.data_augmentation import DataAugmentation
+from utils.cutmix import generate_mixed_sample
+from datasets.create_dataset import multi_scale_transforms
 
 
 class TrainVal:
@@ -33,6 +37,18 @@ class TrainVal:
         self.num_classes = config.num_classes
         self.lr_scheduler = config.lr_scheduler
         self.save_interval = 10
+        self.cut_mix = config.cut_mix
+        self.beta = config.beta
+        self.cutmix_prob = config.cutmix_prob
+
+        self.image_size = config.image_size
+        self.multi_scale = config.multi_scale
+        self.multi_scale_size = config.multi_scale_size
+        self.multi_scale_interval = config.multi_scale_interval
+        if self.cut_mix:
+            print('Using cut mix.')
+        if self.multi_scale:
+            print('Using multi scale training.')
         print('USE LOSS: {}'.format(config.loss_name))
 
         # 加载模型
@@ -43,6 +59,8 @@ class TrainVal:
             drop_rate=config.drop_rate,
             pretrained=True
         )
+        if config.weight_path:
+            self.model = prepare_model.load_chekpoint(self.model, config.weight_path)
         if torch.cuda.is_available():
             self.model = torch.nn.DataParallel(self.model)
             self.model = self.model.cuda()
@@ -90,10 +108,27 @@ class TrainVal:
             images_number, epoch_corrects = 0, 0
 
             tbar = tqdm.tqdm(train_loader)
+            image_size = self.image_size
             for i, (images, labels) in enumerate(tbar):
-                # 网络的前向传播与反向传播
-                labels_predict = self.solver.forward(images)
-                loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
+                if self.multi_scale:
+                    if i % self.multi_scale_interval == 0:
+                        image_size = random.choice(self.multi_scale_size)
+                    images = multi_scale_transforms(image_size, images)
+                if self.cut_mix:
+                    # 使用cut_mix
+                    r = np.random.rand(1)
+                    if self.beta > 0 and r < self.cutmix_prob:
+                        images, labels_a, labels_b, lam = generate_mixed_sample(self.beta, images, labels)
+                        labels_predict = self.solver.forward(images)
+                        loss = self.solver.cal_loss_cutmix(labels_predict, labels_a, labels_b, lam, self.criterion)
+                    else:
+                        # 网络的前向传播
+                        labels_predict = self.solver.forward(images)
+                        loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
+                else:
+                    # 网络的前向传播
+                    labels_predict = self.solver.forward(images)
+                    loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
                 self.solver.backword(self.optimizer, loss)
 
                 images_number += images.size(0)
@@ -106,12 +141,16 @@ class TrainVal:
 
                 params_groups_lr = str()
                 for group_ind, param_group in enumerate(self.optimizer.param_groups):
-                    params_groups_lr = params_groups_lr + 'params_group_%d' % group_ind + ': %.12f, ' % param_group[
-                        'lr']
+                    params_groups_lr = params_groups_lr + 'pg_%d' % group_ind + ': %.8f, ' % param_group['lr']
 
-                descript = '[Train Fold {}][epoch: {}/{}][Lr :{}][Acc: {:.4f}]'.format(self.fold, epoch, self.epoch,
-                                                                                       params_groups_lr,
-                                                                                       train_acc_iteration) + descript
+                descript = '[Train Fold {}][epoch: {}/{}][image_size: {}][Lr :{}][Acc: {:.4f}]'.format(
+                    self.fold,
+                    epoch,
+                    self.epoch,
+                    image_size,
+                    params_groups_lr,
+                    train_acc_iteration
+                ) + descript
 
                 tbar.set_description(desc=descript)
 
@@ -163,6 +202,10 @@ class TrainVal:
                 self.exp_lr_scheduler.step()
             global_step += len(train_loader)
         print('BEST ACC:{}'.format(self.max_accuracy_valid))
+        source_path = os.path.join(self.model_path, 'model_best.pth')
+        target_path = os.path.join(self.config.save_path, self.config.model_type, 'backup', 'model_best.pth')
+        print('Copy %s to %s' % (source_path, target_path))
+        shutil.copy(source_path, target_path)
 
     def validation(self, valid_loader):
         tbar = tqdm.tqdm(valid_loader)
@@ -232,15 +275,18 @@ if __name__ == "__main__":
     data_root = config.dataset_root
     folds_split = config.n_splits
     test_size = config.val_size
+    only_self = config.only_self
+    only_official = config.only_official
+    multi_scale = config.multi_scale
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     if config.augmentation_flag:
         transforms = DataAugmentation(config.erase_prob, full_aug=True, gray_prob=config.gray_prob)
     else:
         transforms = None
-    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size)
+    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_self=only_self, only_official=only_official)
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
-                                                                       transforms=transforms)
+                                                                       transforms=transforms, multi_scale=multi_scale)
 
     for fold_index, [train_loader, valid_loader] in enumerate(zip(train_dataloaders, val_dataloaders)):
         if fold_index in config.selected_fold:

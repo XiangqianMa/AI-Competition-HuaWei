@@ -11,7 +11,7 @@ import torchvision.transforms as T
 
 
 class TrainDataset(Dataset):
-    def __init__(self, data_root, sample_list, label_list, size, mean, std, transforms=None):
+    def __init__(self, data_root, sample_list, label_list, size, mean, std, transforms=None, only_self=False, only_official=False, multi_scale=False):
         """
         Args:
             data_root: str, 数据集根目录
@@ -26,10 +26,32 @@ class TrainDataset(Dataset):
         self.data_root = data_root
         self.sample_list = sample_list
         self.label_list = label_list
+        if only_self and only_official:
+            raise ValueError('only_self, only_official should not be the same.')
+        if only_official:
+            sample_list = []
+            label_list = []
+            for sample, label in zip(self.sample_list, self.label_list):
+                if 'img' in sample:
+                    sample_list.append(sample)
+                    label_list.append(label)
+            self.sample_list = sample_list
+            self.label_list = label_list
+        if only_self:
+            sample_list = []
+            label_list = []
+            for sample, label in zip(self.sample_list, self.label_list):
+                if 'img' not in sample:
+                    sample_list.append(sample)
+                    label_list.append(label)
+            self.sample_list = sample_list
+            self.label_list = label_list            
+        
         self.size = size
         self.mean = mean
         self.std = std
         self.transforms = transforms
+        self.multi_scale = multi_scale
     
     def __getitem__(self, index):
         """
@@ -48,13 +70,18 @@ class TrainDataset(Dataset):
             image = self.transforms(image)
             image = Image.fromarray(image)
         
-        transform_train_list = [
-                    T.Resize(self.size, interpolation=3),
-                    T.ToTensor(),
-                    T.Normalize(self.mean, self.std)
-                ]          
-        transform_compose = T.Compose(transform_train_list)
-        image = transform_compose(image)
+        # 如果不进行多尺度训练，则将图片转换为指定的图片大小，并转换为tensor
+        if self.multi_scale:
+            image = T.Resize(self.size, interpolation=3)(image)
+            image = np.asarray(image)
+        else:
+            transform_train_list = [
+                        T.Resize(self.size, interpolation=3),
+                        T.ToTensor(),
+                        T.Normalize(self.mean, self.std)
+                    ]          
+            transform_compose = T.Compose(transform_train_list)
+            image = transform_compose(image)
         label = torch.tensor(label).long()
 
         return image, label
@@ -66,7 +93,7 @@ class TrainDataset(Dataset):
     
 
 class ValDataset(Dataset):
-    def __init__(self, data_root, sample_list, label_list, size, mean, std):
+    def __init__(self, data_root, sample_list, label_list, size, mean, std, only_self=False, only_official=False, multi_scale=False):
         """
         Args:
             data_root: str, 数据集根目录
@@ -80,9 +107,30 @@ class ValDataset(Dataset):
         self.data_root = data_root
         self.sample_list = sample_list
         self.label_list = label_list
+        if only_self and only_official:
+            raise ValueError('only_self, only_official should not be the same.')       
+        if only_official:
+            sample_list = []
+            label_list = []
+            for sample, label in zip(self.sample_list, self.label_list):
+                if 'img' in sample:
+                    sample_list.append(sample)
+                    label_list.append(label)
+            self.sample_list = sample_list
+            self.label_list = label_list  
+        if only_self:
+            sample_list = []
+            label_list = []
+            for sample, label in zip(self.sample_list, self.label_list):
+                if 'img' not in sample:
+                    sample_list.append(sample)
+                    label_list.append(label)
+            self.sample_list = sample_list
+            self.label_list = label_list              
         self.size = size
         self.mean = mean
         self.std = std
+        self.multi_scale = multi_scale
     
     def __getitem__(self, index):
         """
@@ -98,13 +146,17 @@ class ValDataset(Dataset):
         sample_path = os.path.join(self.data_root, image_name)
         image = Image.open(sample_path).convert('RGB')
         label = self.label_list[index]
-        transform_val_list = [ 
-                    T.Resize(self.size, interpolation=3),
-                    T.ToTensor(),
-                    T.Normalize(self.mean, self.std)
-                ]          
-        transform_compose = T.Compose(transform_val_list)
-        image = transform_compose(image)
+        
+        if self.multi_scale:
+            image = T.Resize(self.size, interpolation=3)(image)
+        else:
+            transform_val_list = [ 
+                        T.Resize(self.size, interpolation=3),
+                        T.ToTensor(),
+                        T.Normalize(self.mean, self.std)
+                    ]          
+            transform_compose = T.Compose(transform_val_list)
+            image = transform_compose(image)
         label = torch.tensor(label).long()
 
         return image_name, image, label
@@ -116,7 +168,7 @@ class ValDataset(Dataset):
 
 
 class GetDataloader(object):
-    def __init__(self, data_root, folds_split=1, test_size=None, label_names_path='data/huawei_data/label_id_name.json'):
+    def __init__(self, data_root, folds_split=1, test_size=None, label_names_path='data/huawei_data/label_id_name.json', only_self=False, only_official=False):
         """
         Args:
             data_root: str, 数据集根目录
@@ -127,6 +179,8 @@ class GetDataloader(object):
         self.folds_split = folds_split
         self.samples, self.labels = self.get_samples_labels()
         self.test_size = test_size
+        self.only_self = only_self
+        self.only_official = only_official
         with open(label_names_path, 'r') as f:
             self.label_to_name = json.load(f)
 
@@ -134,7 +188,7 @@ class GetDataloader(object):
             if not test_size:
                 raise ValueError('You must specified test_size when folds_split equal to 1.')
     
-    def get_dataloader(self, batch_size, image_size, mean, std, transforms=None):
+    def get_dataloader(self, batch_size, image_size, mean, std, transforms=None, multi_scale=False):
         """得到数据加载器
         Args:
             batch_size: int, 批量大小
@@ -142,6 +196,7 @@ class GetDataloader(object):
             mean: tuple, 通道均值
             std: tuple, 通道方差
             transforms: callable, 数据增强方式
+            multi_scale: 是否使用多尺度训练
         Return:
             train_dataloader_folds: list, [train_dataloader_0, train_dataloader_1,...]
             valid_dataloader_folds: list, [val_dataloader_0, val_dataloader_1, ...]
@@ -151,9 +206,30 @@ class GetDataloader(object):
         self.draw_train_val_distribution(train_lists, val_lists)
 
         for train_list, val_list in zip(train_lists, val_lists):
-            train_dataset = TrainDataset(self.data_root, train_list[0], train_list[1], image_size,
-                                         transforms=transforms, mean=mean, std=std)
-            val_dataset = ValDataset(self.data_root, val_list[0], val_list[1], image_size, mean=mean, std=std)
+            train_dataset = TrainDataset(
+                self.data_root, 
+                train_list[0], 
+                train_list[1], 
+                image_size,
+                transforms=transforms, 
+                mean=mean, 
+                std=std, 
+                only_self=self.only_self, 
+                only_official=self.only_official, 
+                multi_scale=multi_scale
+                )
+            # 默认不在验证集上进行多尺度
+            val_dataset = ValDataset(
+                self.data_root, 
+                val_list[0], 
+                val_list[1], 
+                image_size, 
+                mean=mean, 
+                std=std, 
+                only_self=self.only_self, 
+                only_official=self.only_official, 
+                multi_scale=False
+                )
 
             train_dataloader = DataLoader(
                 train_dataset,
@@ -289,6 +365,22 @@ class GetDataloader(object):
                     labels.append(label)
         return samples, labels
 
+
+def multi_scale_transforms(image_size, images, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+    transform_train_list = [
+                T.Resize(image_size, interpolation=3),
+                T.ToTensor(),
+                T.Normalize(mean, std)
+            ]
+    transform_compose = T.Compose(transform_train_list)
+    images = images.numpy()
+    images_resize = torch.zeros(images.shape[0], 3, image_size[0], image_size[1])
+    for index in range(images.shape[0]):
+        image = transform_compose(Image.fromarray(images[index]))
+        images_resize[index] = image
+
+    return images_resize
+    
 
 if __name__ == "__main__":
     data_root = 'data/huawei_data/train_data'

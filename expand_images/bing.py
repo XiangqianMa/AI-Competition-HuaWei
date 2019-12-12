@@ -39,14 +39,14 @@ def down_pic(pic_urls, key_word, save_path):
             string = save_path + '/' + key_word + '_' + str(i + 1) + '.jpg'
             with open(string, 'wb') as f:
                 f.write(pic.content)
-                print('成功下载第%s张图片: %s' % (str(i + 1), str(pic_url)))
+                # print('成功下载第%s张图片: %s' % (str(i + 1), str(pic_url)))
         except Exception as e:
-            print('下载第%s张图片时失败: %s' % (str(i + 1), str(pic_url)))
+            # print('下载第%s张图片时失败: %s' % (str(i + 1), str(pic_url)))
             print(e)
             continue
 
 
-def download_images_keyword(keyword, page_number=20):
+def download_images_keyword(keyword, page_number=70):
     url_init_first = r'http://image.baidu.com/search/flip?tn=baiduimage&ipn=r&ct=201326592&cl=2&lm=-1&st=-1&fm=result&fr=&sf=1&fmq=1497491098685_R&pv=&ic=0&nc=1&z=&se=1&showtab=0&fb=0&width=&height=&face=0&istype=2&ie=utf-8&ctd=1497491098685%5E00_1519X735&word='
     url_init = url_init_first + urllib.parse.quote(keyword, safe='/')
     all_pic_urls = []
@@ -65,12 +65,11 @@ def download_images_keyword(keyword, page_number=20):
     
 
 if __name__ == '__main__':
-    save_path = '/media/mxq/data/competition/HuaWei/酥饺'
-    label_json_path = 'data/huawei_data/label_id_name.json'
+    save_path = '/media/mxq/data/competition/HuaWei/下载的图片/download_images_50pages'
+    label_json_path = '/media/mxq/data/competition/HuaWei/label_id_name.json'
     with open(label_json_path, 'r') as f:
         label = json.load(f).values()
     keywords = [keyword.split('/')[1] for keyword in label]
-    keywords = ['酥饺', '浆水鱼鱼']
-    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         executor.map(download_images_keyword, keywords)
 

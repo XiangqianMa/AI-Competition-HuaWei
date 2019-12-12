@@ -27,8 +27,6 @@ class DemoResults(object):
         self.dataset_root = config.dataset_root
         self.model_type = config.model_type
         self.classes_num = config.num_classes
-        self.last_stride = config.last_stride
-        self.drop_rate = config.droprate
         self.image_size = config.image_size
         self.weight_path = weight_path
         self.fold = str(fold)
@@ -122,7 +120,7 @@ class DemoResults(object):
             label_dict: dict，类标名称与类标之间的对应关系
         """
         prepare_model = PrepareModel()
-        model = prepare_model.create_model(self.model_type, self.classes_num, self.drop_rate, pretrained=False)
+        model = prepare_model.create_model(self.model_type, self.classes_num, 0, pretrained=False)
         model.load_state_dict(torch.load(self.weight_path)['state_dict'])
         print('Successfully Loaded from %s' % self.weight_path)
         model = model.cuda()
@@ -141,6 +139,7 @@ if __name__ == "__main__":
     data_root = config.dataset_root
     folds_split = config.n_splits
     test_size = config.val_size
+    only_official = config.only_official
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     transforms = None
@@ -155,7 +154,7 @@ if __name__ == "__main__":
     shutil.rmtree(save_path)
     os.makedirs(save_path)
 
-    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size)
+    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_official=only_official)
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
                                                                        transforms=transforms)
 

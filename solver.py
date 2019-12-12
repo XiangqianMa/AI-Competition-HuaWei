@@ -1,6 +1,7 @@
 '''
 该文件的功能：实现模型的前向传播，反向传播，损失函数计算，保存模型，加载模型功能
 '''
+import numpy as np
 import torch
 import shutil
 import os
@@ -46,6 +47,22 @@ class Solver:
         '''
         targets = targets.to(self.device)
         return criterion(predicts, targets)
+
+    def cal_loss_cutmix(self, predicts, targets_a, targets_b, lam, criterion):
+        """计算使用cutmix时的损失
+
+        Args:
+            predicts: 网络的预测输出
+            targets_a: 类标a
+            targets_b: 类标b
+            lam: lambda参数
+            criterion: 损失函数
+        Return:
+            loss: 计算出的损失值        
+        """
+        targets_a = targets_a.to(self.device)
+        targets_b = targets_b.to(self.device)
+        return criterion(predicts, targets_a) * lam + criterion(predicts, targets_b) * (1. - lam)
 
     def backword(self, optimizer, loss):
         ''' 实现网络的反向传播

@@ -1,3 +1,4 @@
+import torch
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from models.custom_model import CustomModel
@@ -98,3 +99,9 @@ class PrepareModel:
         elif lr_scheduler_type == 'ReduceLR':
             my_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=5)
         return my_lr_scheduler
+
+    def load_chekpoint(self, model, weight_path):
+        print('Loading weight from %s.' % weight_path)
+        weight = torch.load(weight_path)
+        model.load_state_dict(weight['state_dict'])
+        return model
