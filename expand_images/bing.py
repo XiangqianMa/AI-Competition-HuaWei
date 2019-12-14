@@ -41,8 +41,8 @@ def down_pic(pic_urls, key_word, save_path):
                 f.write(pic.content)
                 # print('成功下载第%s张图片: %s' % (str(i + 1), str(pic_url)))
         except Exception as e:
-            # print('下载第%s张图片时失败: %s' % (str(i + 1), str(pic_url)))
-            print(e)
+            print('下载第%s张图片时失败: %s' % (str(i + 1), str(pic_url)))
+            # print(e)
             continue
 
 
@@ -65,11 +65,14 @@ def download_images_keyword(keyword, page_number=70):
     
 
 if __name__ == '__main__':
-    save_path = '/media/mxq/data/competition/HuaWei/下载的图片/download_images_50pages'
+    save_path = '/media/mxq/data/competition/HuaWei/下载的图片/补充'
     label_json_path = '/media/mxq/data/competition/HuaWei/label_id_name.json'
     with open(label_json_path, 'r') as f:
         label = json.load(f).values()
-    keywords = [keyword.split('/')[1] for keyword in label]
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+    # keywords = [keyword.split('/')[1] for keyword in label]
+    keywords = [
+        '皮影',
+    ]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=15) as executor:
         executor.map(download_images_keyword, keywords)
 

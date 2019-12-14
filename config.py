@@ -36,7 +36,7 @@ def get_classify_config():
 
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
-    parser.add_argument('--lr', type=float, default=3e-5, help='init lr')
+    parser.add_argument('--lr', type=float, default=3e-4, help='init lr')
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
     # 学习率衰减策略
     parser.add_argument('--lr_scheduler', type=str, default='StepLR',

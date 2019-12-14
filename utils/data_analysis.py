@@ -143,9 +143,9 @@ class DatasetStatistic:
 
 
 if __name__ == '__main__':
-    data_root = 'data/huawei_data/train_data'
+    data_root = '/media/mxq/data/competition/HuaWei/下载的图片/combine_50pages'
     label_id_json = 'data/huawei_data/label_id_name.json'
     dataset_statistic = DatasetStatistic(data_root, label_id_json)
-    dataset_statistic.show_image_aspect_ratio_distr()
+    dataset_statistic.show_label_number_distr()
     # names = dataset_statistic.get_name_less_than_thresh(100)
     # print(names)
