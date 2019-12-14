@@ -5,7 +5,7 @@ def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[416, 416], help='image size')
     parser.add_argument('--batch_size', type=int, default=6, help='batch size')
-    parser.add_argument('--epoch', type=int, default=10, help='epoch')
+    parser.add_argument('--epoch', type=int, default=45, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')

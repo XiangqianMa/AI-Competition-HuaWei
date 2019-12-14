@@ -23,11 +23,11 @@ class CustomModel(nn.Module):
             pretrained_type = None
         model = getattr(pretrainedmodels, self.model_name)(pretrained=pretrained_type)
         self.feature_layer1 = torch.nn.Sequential(*list(model.children())[:-3])
-        self.conv1 = torch.nn.Conv2d(1024, 1024, [3, 3], stride=2, padding=1, groups=1024)
+        self.conv1 = torch.nn.Conv2d(1024, 2048, [3, 3], stride=2, padding=1, groups=1024)
         self.feature_layer2 = torch.nn.Sequential(*list(model.children())[-3:-2])
         self.avg_pool = torch.nn.AdaptiveAvgPool2d(output_size=(1, 1))
 
-        in_features = 1024 + 2048
+        in_features = 2048 + 2048
         add_block = [nn.Linear(in_features, 1024), nn.ReLU()]
         if drop_rate > 0:
             add_block += [nn.Dropout(p=drop_rate)]
