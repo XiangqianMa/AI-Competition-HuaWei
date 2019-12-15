@@ -64,7 +64,7 @@ class Solver:
         targets_b = targets_b.to(self.device)
         return criterion(predicts, targets_a) * lam + criterion(predicts, targets_b) * (1. - lam)
 
-    def backword(self, optimizer, loss):
+    def backword(self, optimizer, loss, sparsity=None):
         ''' 实现网络的反向传播
         
         Args:
@@ -74,6 +74,9 @@ class Solver:
             None
         '''
         loss.backward()
+        # 稀疏度训练
+        if sparsity:
+            sparsity.updateBN()
         optimizer.step()
         optimizer.zero_grad()
 

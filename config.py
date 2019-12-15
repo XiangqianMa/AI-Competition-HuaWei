@@ -4,8 +4,8 @@ import argparse
 def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[416, 416], help='image size')
-    parser.add_argument('--batch_size', type=int, default=6, help='batch size')
-    parser.add_argument('--epoch', type=int, default=10, help='epoch')
+    parser.add_argument('--batch_size', type=int, default=24, help='batch size')
+    parser.add_argument('--epoch', type=int, default=40, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')
@@ -28,6 +28,10 @@ def get_classify_config():
     parser.add_argument('--multi_scale', type=bool, default=True, help='use multi scale training or not.')
     parser.add_argument('--multi_scale_size', type=list, default=[[256, 256], [288, 288], [320, 320], [352, 352], [384, 384], [416, 416]], help='multi scale choice.')
     parser.add_argument('--multi_scale_interval', type=int, default=10, help='make a scale choice every [] iterations.')
+    # 稀疏度训练
+    parser.add_argument('--sparsity', type=bool, default=False, help='use sparsity training or not.')
+    parser.add_argument('--sparsity_scale', type=float, default=0.5, help='sparsity scale.')
+    parser.add_argument('--penalty_type', type=str, default='L1', help='penalty type.')
     
     # model set
     parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d',
@@ -36,7 +40,7 @@ def get_classify_config():
 
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
-    parser.add_argument('--lr', type=float, default=3e-5, help='init lr')
+    parser.add_argument('--lr', type=float, default=3e-4, help='init lr')
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
     # 学习率衰减策略
     parser.add_argument('--lr_scheduler', type=str, default='StepLR',

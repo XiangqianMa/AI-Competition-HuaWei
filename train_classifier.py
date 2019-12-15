@@ -22,6 +22,7 @@ from utils.classification_metric import ClassificationMetric
 from datasets.data_augmentation import DataAugmentation
 from utils.cutmix import generate_mixed_sample
 from datasets.create_dataset import multi_scale_transforms
+from utils.sparsity import Sparsity
 
 
 class TrainVal:
@@ -40,11 +41,16 @@ class TrainVal:
         self.cut_mix = config.cut_mix
         self.beta = config.beta
         self.cutmix_prob = config.cutmix_prob
-
+        
+        # 多尺度
         self.image_size = config.image_size
         self.multi_scale = config.multi_scale
         self.multi_scale_size = config.multi_scale_size
         self.multi_scale_interval = config.multi_scale_interval
+        # 稀疏训练
+        self.sparsity = config.sparsity
+        self.sparsity_scale = config.sparsity_scale
+        self.penalty_type = config.penalty_type
         if self.cut_mix:
             print('Using cut mix.')
         if self.multi_scale:
@@ -61,6 +67,13 @@ class TrainVal:
         )
         if config.weight_path:
             self.model = prepare_model.load_chekpoint(self.model, config.weight_path)
+        
+        # 稀疏训练
+        self.sparsity_train = None
+        if config.sparsity:
+            print('Using sparsity training.')
+            self.sparsity_train = Sparsity(self.model, sparsity_scale=self.sparsity_scale, penalty_type=self.penalty_type)
+        
         if torch.cuda.is_available():
             self.model = torch.nn.DataParallel(self.model)
             self.model = self.model.cuda()
@@ -129,7 +142,7 @@ class TrainVal:
                     # 网络的前向传播
                     labels_predict = self.solver.forward(images)
                     loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
-                self.solver.backword(self.optimizer, loss)
+                self.solver.backword(self.optimizer, loss, sparsity=self.sparsity_train)
 
                 images_number += images.size(0)
                 epoch_corrects += self.model.module.get_classify_result(labels_predict, labels, self.device).sum()
