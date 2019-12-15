@@ -1,3 +1,4 @@
+import torch
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from model.deploy_models.custom_model import CustomModel
@@ -49,7 +50,7 @@ class PrepareModel:
             optimizer: 优化器
         """
         ignored_params = list(map(id, model.module.classifier.parameters()))
-        base_params = filter(lambda p: id(p) not in ignored_params, model.module.parameters())
+        base_params = filter(lambda p: id(p) not in ignored_params and p.requires_grad, model.module.parameters())
         print('Creating optimizer: %s' % config.optimizer)
         if config.optimizer == 'Adam':
             optimizer = optim.Adam(
@@ -98,3 +99,9 @@ class PrepareModel:
         elif lr_scheduler_type == 'ReduceLR':
             my_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=5)
         return my_lr_scheduler
+
+    def load_chekpoint(self, model, weight_path):
+        print('Loading weight from %s.' % weight_path)
+        weight = torch.load(weight_path)
+        model.load_state_dict(weight['state_dict'])
+        return model
