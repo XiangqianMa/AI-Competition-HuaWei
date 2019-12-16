@@ -152,7 +152,7 @@ class TrainVal:
                     labels_predict = self.solver.forward(images)
                     loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
                 
-                if self.l1_decay:
+                if self.l1_regular:
                     current_l1_regular_loss = self.l1_reg_loss(self.model)
                     loss += current_l1_regular_loss
                     l1_regular_loss += current_l1_regular_loss.item()
