@@ -4,8 +4,8 @@ import argparse
 def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[416, 416], help='image size')
-    parser.add_argument('--batch_size', type=int, default=24, help='batch size')
-    parser.add_argument('--epoch', type=int, default=40, help='epoch')
+    parser.add_argument('--batch_size', type=int, default=6, help='batch size')
+    parser.add_argument('--epoch', type=int, default=30, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')
@@ -30,8 +30,11 @@ def get_classify_config():
     parser.add_argument('--multi_scale_interval', type=int, default=10, help='make a scale choice every [] iterations.')
     # 稀疏度训练
     parser.add_argument('--sparsity', type=bool, default=False, help='use sparsity training or not.')
-    parser.add_argument('--sparsity_scale', type=float, default=0.5, help='sparsity scale.')
+    parser.add_argument('--sparsity_scale', type=float, default=0.3, help='sparsity scale.')
     parser.add_argument('--penalty_type', type=str, default='L1', help='penalty type.')
+    # l1正则化
+    parser.add_argument('--l1_regular', type=bool, default=True, help='use l1 regular or not.')
+    parser.add_argument('--l1_decay', type=float, default=1e-4, help='l1 regular decay factor.')
     
     # model set
     parser.add_argument('--model_type', type=str, default='se_resnext101_32x4d',

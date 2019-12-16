@@ -22,7 +22,7 @@ from utils.classification_metric import ClassificationMetric
 from datasets.data_augmentation import DataAugmentation
 from utils.cutmix import generate_mixed_sample
 from datasets.create_dataset import multi_scale_transforms
-from utils.sparsity import Sparsity
+from utils.sparsity import Sparsity, Regularization
 
 
 class TrainVal:
@@ -74,6 +74,13 @@ class TrainVal:
             print('Using sparsity training.')
             self.sparsity_train = Sparsity(self.model, sparsity_scale=self.sparsity_scale, penalty_type=self.penalty_type)
         
+        # l1正则化
+        self.l1_regular = config.l1_regular
+        self.l1_decay = config.l1_decay
+        if self.l1_regular:
+            print('Using l1_regular')
+            self.l1_reg_loss = Regularization(self.model, weight_decay=self.l1_decay, p=1)
+            
         if torch.cuda.is_available():
             self.model = torch.nn.DataParallel(self.model)
             self.model = self.model.cuda()
@@ -122,6 +129,8 @@ class TrainVal:
 
             tbar = tqdm.tqdm(train_loader)
             image_size = self.image_size
+            l1_regular_loss = 0
+            loss_with_l1_regular = 0
             for i, (images, labels) in enumerate(tbar):
                 if self.multi_scale:
                     if i % self.multi_scale_interval == 0:
@@ -142,6 +151,12 @@ class TrainVal:
                     # 网络的前向传播
                     labels_predict = self.solver.forward(images)
                     loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
+                
+                if self.l1_decay:
+                    current_l1_regular_loss = self.l1_reg_loss(self.model)
+                    loss += current_l1_regular_loss
+                    l1_regular_loss += current_l1_regular_loss.item()
+                    loss_with_l1_regular += loss.item()
                 self.solver.backword(self.optimizer, loss, sparsity=self.sparsity_train)
 
                 images_number += images.size(0)
@@ -164,13 +179,19 @@ class TrainVal:
                     params_groups_lr,
                     train_acc_iteration
                 ) + descript
-
+                if self.l1_regular:
+                    descript += '[L1RegularLoss: {:.4f}][Loss: {:.4f}]'.format(current_l1_regular_loss.item(), loss.item())
                 tbar.set_description(desc=descript)
 
             # 写到tensorboard中
             epoch_acc = epoch_corrects / images_number
             self.writer.add_scalar('TrainAccEpoch', epoch_acc, epoch)
             self.writer.add_scalar('Lr', self.optimizer.param_groups[0]['lr'], epoch)
+            if self.l1_regular:
+                l1_regular_loss_epoch = l1_regular_loss / len(train_loader)
+                loss_with_l1_regular_epoch =  loss_with_l1_regular / len(train_loader)
+                self.writer.add_scalar('TrainL1RegularLoss', l1_regular_loss_epoch, epoch)
+                self.writer.add_scalar('TrainLossWithL1Regular', loss_with_l1_regular_epoch, epoch)
             descript = self.criterion.record_loss_epoch(len(train_loader), self.writer.add_scalar, epoch)
 
             # Print the log info
