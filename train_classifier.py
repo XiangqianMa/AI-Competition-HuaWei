@@ -51,6 +51,7 @@ class TrainVal:
         self.sparsity = config.sparsity
         self.sparsity_scale = config.sparsity_scale
         self.penalty_type = config.penalty_type
+        self.selected_labels = config.selected_labels
         if self.cut_mix:
             print('Using cut mix.')
         if self.multi_scale:
@@ -273,14 +274,16 @@ class TrainVal:
             if oa > self.max_accuracy_valid:
                 is_best = True
                 self.max_accuracy_valid = oa
-                self.classification_metric.draw_cm_and_save_result(
-                    classify_report,
-                    my_confusion_matrix,
-                    acc_for_each_class,
-                    oa,
-                    average_accuracy,
-                    kappa
-                )
+                if not self.selected_labels:
+                    # 只有在未指定训练类别时才画混淆矩阵，否则会出错
+                    self.classification_metric.draw_cm_and_save_result(
+                        classify_report,
+                        my_confusion_matrix,
+                        acc_for_each_class,
+                        oa,
+                        average_accuracy,
+                        kappa
+                    )
             else:
                 is_best = False
 

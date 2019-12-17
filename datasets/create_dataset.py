@@ -208,7 +208,7 @@ class GetDataloader(object):
         """
         train_lists, val_lists = self.get_split()
         train_dataloader_folds, valid_dataloader_folds = list(), list()
-        self.draw_train_val_distribution(train_lists, val_lists)
+        # self.draw_train_val_distribution(train_lists, val_lists)
 
         for train_list, val_list in zip(train_lists, val_lists):
             train_dataset = TrainDataset(
