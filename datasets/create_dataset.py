@@ -168,12 +168,13 @@ class ValDataset(Dataset):
 
 
 class GetDataloader(object):
-    def __init__(self, data_root, folds_split=1, test_size=None, label_names_path='data/huawei_data/label_id_name.json', only_self=False, only_official=False):
+    def __init__(self, data_root, folds_split=1, test_size=None, label_names_path='data/huawei_data/label_id_name.json', only_self=False, only_official=False, selected_labels=None):
         """
         Args:
             data_root: str, 数据集根目录
             folds_split: int, 划分为几折
             test_size: 验证集占的比例, [0, 1]
+            selected_labels: list，被选中用于训练的类别
         """
         self.data_root = data_root
         self.folds_split = folds_split
@@ -181,6 +182,9 @@ class GetDataloader(object):
         self.test_size = test_size
         self.only_self = only_self
         self.only_official = only_official
+        self.selected_labels = selected_labels
+        if self.selected_labels:
+            print('Selected Labels: ' + self.selected_labels)
         with open(label_names_path, 'r') as f:
             self.label_to_name = json.load(f)
 
@@ -361,8 +365,15 @@ class GetDataloader(object):
                 for sample_label in f:
                     sample_name = sample_label.split(', ')[0]
                     label = int(sample_label.split(', ')[1])
-                    samples.append(sample_name)
-                    labels.append(label)
+                    if self.selected_labels:
+                        # 依据父类别进行过滤
+                        parent_label = self.label_to_name[str(label)]
+                        if parent_label in self.selected_labels:
+                            samples.append(sample_name)
+                            labels.append(label) 
+                    else:                           
+                        samples.append(sample_name)
+                        labels.append(label)
         return samples, labels
 
 

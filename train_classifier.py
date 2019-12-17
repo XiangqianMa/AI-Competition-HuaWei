@@ -312,13 +312,14 @@ if __name__ == "__main__":
     only_self = config.only_self
     only_official = config.only_official
     multi_scale = config.multi_scale
+    selected_labels = config.selected_labels
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     if config.augmentation_flag:
         transforms = DataAugmentation(config.erase_prob, full_aug=True, gray_prob=config.gray_prob)
     else:
         transforms = None
-    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_self=only_self, only_official=only_official)
+    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_self=only_self, only_official=only_official, selected_labels=selected_labels)
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
                                                                        transforms=transforms, multi_scale=multi_scale)
 

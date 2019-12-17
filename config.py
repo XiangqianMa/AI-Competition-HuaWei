@@ -20,6 +20,8 @@ def get_classify_config():
     # 选择使用的数据集
     parser.add_argument('--only_self', type=bool, default=False, help='only use self data or not.')
     parser.add_argument('--only_official', type=bool, default=False, help='only use official data or not.')
+    # 用于训练的类别
+    parser.add_argument('--selected_labels', type=list, default=None, help='labels chosen of training.')
     # cut_mix
     parser.add_argument('--cut_mix', type=bool, default=True, help='use cut mix or not.')
     parser.add_argument('--beta', type=float, default=1.0, help='beta of cut mix.')
@@ -29,11 +31,11 @@ def get_classify_config():
     parser.add_argument('--multi_scale_size', type=list, default=[[256, 256], [288, 288], [320, 320], [352, 352], [384, 384], [416, 416]], help='multi scale choice.')
     parser.add_argument('--multi_scale_interval', type=int, default=10, help='make a scale choice every [] iterations.')
     # 稀疏度训练
-    parser.add_argument('--sparsity', type=bool, default=False, help='use sparsity training or not.')
-    parser.add_argument('--sparsity_scale', type=float, default=0.3, help='sparsity scale.')
+    parser.add_argument('--sparsity', type=bool, default=True, help='use sparsity training or not.')
+    parser.add_argument('--sparsity_scale', type=float, default=1e-2, help='sparsity scale.')
     parser.add_argument('--penalty_type', type=str, default='L1', help='penalty type.')
     # l1正则化
-    parser.add_argument('--l1_regular', type=bool, default=True, help='use l1 regular or not.')
+    parser.add_argument('--l1_regular', type=bool, default=False, help='use l1 regular or not.')
     parser.add_argument('--l1_decay', type=float, default=1e-4, help='l1 regular decay factor.')
     
     # model set
