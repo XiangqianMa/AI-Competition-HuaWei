@@ -178,15 +178,16 @@ class GetDataloader(object):
         """
         self.data_root = data_root
         self.folds_split = folds_split
-        self.samples, self.labels = self.get_samples_labels()
-        self.test_size = test_size
-        self.only_self = only_self
-        self.only_official = only_official
         self.selected_labels = selected_labels
         if self.selected_labels:
             print('Selected Labels: ' + self.selected_labels)
         with open(label_names_path, 'r') as f:
             self.label_to_name = json.load(f)
+
+        self.samples, self.labels = self.get_samples_labels()
+        self.test_size = test_size
+        self.only_self = only_self
+        self.only_official = only_official
 
         if folds_split == 1:
             if not test_size:
