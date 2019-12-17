@@ -180,7 +180,7 @@ class GetDataloader(object):
         self.folds_split = folds_split
         self.selected_labels = selected_labels
         if self.selected_labels:
-            print('Selected Labels: ' + self.selected_labels)
+            print('Selected Labels: ', self.selected_labels)
         with open(label_names_path, 'r') as f:
             self.label_to_name = json.load(f)
 
@@ -368,7 +368,7 @@ class GetDataloader(object):
                     label = int(sample_label.split(', ')[1])
                     if self.selected_labels:
                         # 依据父类别进行过滤
-                        parent_label = self.label_to_name[str(label)]
+                        parent_label = self.label_to_name[str(label)].split('/')[0]
                         if parent_label in self.selected_labels:
                             samples.append(sample_name)
                             labels.append(label) 
