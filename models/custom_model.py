@@ -77,7 +77,7 @@ class CustomModel(nn.Module):
         scores = self.classifier(global_features)
         return scores
 
-    def get_classify_result(self, outputs, labels, device):
+    def get_classify_result(self, outputs, parent_labels, children_labels, parent_num_classes, children_predicts_index, device):
         """
 
         Args:
@@ -88,8 +88,29 @@ class CustomModel(nn.Module):
         Returns: 预测对了多少个样本
 
         """
-        outputs = F.softmax(outputs, dim=1)
-        return (outputs.max(1)[1] == labels.to(device)).float()
+        parent_labels = parent_labels.to(device)
+        children_labels = children_labels.to(device)
+        # 父类的预测分数
+        parent_outputs = F.softmax(outputs[:, :parent_num_classes])
+        parent_predict = parent_outputs.max(dim=1)[1]
+        predict_results = torch.zeros(outputs.size(0))
+        for batch_index in range(outputs.size(0)):
+            parent_label = parent_labels[batch_index]
+            predict_predict_label = parent_predict[batch_index]
+            if predict_predict_label == parent_label:
+                # 当父类预测正确时才计算子类
+                start_index = children_predicts_index[parent_label][0] + parent_num_classes
+                end_index = children_predicts_index[parent_label][1] + parent_num_classes
+                child_output = F.softmax(outputs[batch_index, start_index:end_index])
+                child_predict = child_output.argmax()
+                if child_predict == children_labels[batch_index]:
+                    predict_results[batch_index] = 1
+                else:
+                    predict_results[batch_index] = 0
+            else:
+                predict_results[batch_index] = 0
+
+        return predict_results
 
 
 if __name__ == '__main__':

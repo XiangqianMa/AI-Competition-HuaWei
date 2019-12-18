@@ -36,6 +36,9 @@ class TrainVal:
         self.fold = fold
         self.epoch = config.epoch
         self.num_classes = config.num_classes
+        self.parent_num_classes = config.parent_num_classes
+        self.children_num_classes = config.children_num_classes
+        self.children_predicts_index = [[0, 9], [9, 23], [23, 25], [25, 31], [31, 54]]  # 预测向量中的各个父类对应的子类的下标位置
         self.lr_scheduler = config.lr_scheduler
         self.save_interval = 10
         self.cut_mix = config.cut_mix
@@ -99,7 +102,7 @@ class TrainVal:
         )
 
         # 加载损失函数
-        self.criterion = Loss(config.model_type, config.loss_name, self.num_classes)
+        self.criterion = Loss(config.model_type, config.loss_name, self.parent_num_classes, self.children_num_classes)
 
         # 实例化实现各种子函数的 solver 类
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -132,7 +135,7 @@ class TrainVal:
             image_size = self.image_size
             l1_regular_loss = 0
             loss_with_l1_regular = 0
-            for i, (images, labels) in enumerate(tbar):
+            for i, (images, parent_labels, child_labels) in enumerate(tbar):
                 if self.multi_scale:
                     if i % self.multi_scale_interval == 0:
                         image_size = random.choice(self.multi_scale_size)
@@ -141,17 +144,17 @@ class TrainVal:
                     # 使用cut_mix
                     r = np.random.rand(1)
                     if self.beta > 0 and r < self.cutmix_prob:
-                        images, labels_a, labels_b, lam = generate_mixed_sample(self.beta, images, labels)
+                        images, parent_labels_a, parent_labels_b, child_labels_a, child_labels_b, lam = generate_mixed_sample(self.beta, images, parent_labels, child_labels)
                         labels_predict = self.solver.forward(images)
-                        loss = self.solver.cal_loss_cutmix(labels_predict, labels_a, labels_b, lam, self.criterion)
+                        loss = self.solver.cal_loss_cutmix(labels_predict, parent_labels_a, parent_labels_b, child_labels_a, child_labels_b, lam, self.criterion)
                     else:
                         # 网络的前向传播
                         labels_predict = self.solver.forward(images)
-                        loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
+                        loss = self.solver.cal_loss(labels_predict, parent_labels, child_labels, self.criterion)
                 else:
                     # 网络的前向传播
                     labels_predict = self.solver.forward(images)
-                    loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
+                    loss = self.solver.cal_loss(labels_predict, parent_labels, child_labels, self.criterion)
                 
                 if self.l1_regular:
                     current_l1_regular_loss = self.l1_reg_loss(self.model)
@@ -161,8 +164,16 @@ class TrainVal:
                 self.solver.backword(self.optimizer, loss, sparsity=self.sparsity_train)
 
                 images_number += images.size(0)
-                epoch_corrects += self.model.module.get_classify_result(labels_predict, labels, self.device).sum()
-                train_acc_iteration = self.model.module.get_classify_result(labels_predict, labels, self.device).mean()
+                predicts = self.model.module.get_classify_result(
+                    labels_predict,
+                    parent_labels,
+                    child_labels,
+                    self.parent_num_classes,
+                    self.children_predicts_index,
+                    self.device
+                )
+                epoch_corrects += predicts.sum()
+                train_acc_iteration = predicts.mean()
 
                 # 保存到tensorboard，每一步存储一个
                 descript = self.criterion.record_loss_iteration(self.writer.add_scalar, global_step + i)
@@ -190,7 +201,7 @@ class TrainVal:
             self.writer.add_scalar('Lr', self.optimizer.param_groups[0]['lr'], epoch)
             if self.l1_regular:
                 l1_regular_loss_epoch = l1_regular_loss / len(train_loader)
-                loss_with_l1_regular_epoch =  loss_with_l1_regular / len(train_loader)
+                loss_with_l1_regular_epoch = loss_with_l1_regular / len(train_loader)
                 self.writer.add_scalar('TrainL1RegularLoss', l1_regular_loss_epoch, epoch)
                 self.writer.add_scalar('TrainLossWithL1Regular', loss_with_l1_regular_epoch, epoch)
             descript = self.criterion.record_loss_epoch(len(train_loader), self.writer.add_scalar, epoch)
@@ -245,51 +256,40 @@ class TrainVal:
     def validation(self, valid_loader):
         tbar = tqdm.tqdm(valid_loader)
         self.model.eval()
-        labels_predict_all, labels_all = np.empty(shape=(0,)), np.empty(shape=(0,))
         epoch_loss = 0
+        epoch_corrects = 0
+        images_num = 0
         with torch.no_grad():
-            for i, (_, images, labels) in enumerate(tbar):
+            for i, (_, images, parent_labels, children_labels) in enumerate(tbar):
                 # 网络的前向传播
                 labels_predict = self.solver.forward(images)
-                loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
+                loss = self.solver.cal_loss(labels_predict, parent_labels, children_labels, self.criterion)
 
-                epoch_loss += loss
+                epoch_loss += loss.item()
 
-                # 先经过softmax函数，再经过argmax函数
-                labels_predict = F.softmax(labels_predict, dim=1)
-                labels_predict = torch.argmax(labels_predict, dim=1).detach().cpu().numpy()
-
-                labels_predict_all = np.concatenate((labels_predict_all, labels_predict))
-                labels_all = np.concatenate((labels_all, labels))
-
-                descript = '[Valid][Loss: {:.4f}]'.format(loss)
-                tbar.set_description(desc=descript)
-
-            classify_report, my_confusion_matrix, acc_for_each_class, oa, average_accuracy, kappa = \
-                self.classification_metric.get_metric(
-                    labels_all,
-                    labels_predict_all
+                predicts = self.model.module.get_classify_result(
+                    labels_predict,
+                    parent_labels,
+                    children_labels,
+                    self.parent_num_classes,
+                    self.children_predicts_index,
+                    self.device
                 )
-
-            if oa > self.max_accuracy_valid:
+                epoch_corrects += predicts.sum()
+                images_num += images.size(0)
+                iteration_acc = predicts.mean()
+                descript = '[Valid][Loss: {:.4f}][Acc: {:.4f}]'.format(loss, iteration_acc)
+                tbar.set_description(desc=descript)
+            accuracy = epoch_corrects / images_num
+            if accuracy > self.max_accuracy_valid:
                 is_best = True
-                self.max_accuracy_valid = oa
-                if not self.selected_labels:
-                    # 只有在未指定训练类别时才画混淆矩阵，否则会出错
-                    self.classification_metric.draw_cm_and_save_result(
-                        classify_report,
-                        my_confusion_matrix,
-                        acc_for_each_class,
-                        oa,
-                        average_accuracy,
-                        kappa
-                    )
+                self.max_accuracy_valid = accuracy
             else:
                 is_best = False
 
-            print('OA:{}, AA:{}, Kappa:{}'.format(oa, average_accuracy, kappa))
+            print('[Loss: {:.4f}][Accuracy: {:.4f}]'.format(epoch_loss / len(tbar), accuracy))
 
-            return oa, epoch_loss / len(tbar), is_best
+            return accuracy, epoch_loss / len(tbar), is_best
 
     def init_log(self):
         # 保存配置信息和初始化tensorboard
@@ -312,8 +312,6 @@ if __name__ == "__main__":
     data_root = config.dataset_root
     folds_split = config.n_splits
     test_size = config.val_size
-    only_self = config.only_self
-    only_official = config.only_official
     multi_scale = config.multi_scale
     selected_labels = config.selected_labels
     mean = (0.485, 0.456, 0.406)
@@ -322,7 +320,7 @@ if __name__ == "__main__":
         transforms = DataAugmentation(config.erase_prob, full_aug=True, gray_prob=config.gray_prob)
     else:
         transforms = None
-    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_self=only_self, only_official=only_official, selected_labels=selected_labels)
+    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, selected_labels=selected_labels)
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
                                                                        transforms=transforms, multi_scale=multi_scale)
 

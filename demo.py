@@ -140,6 +140,7 @@ if __name__ == "__main__":
     folds_split = config.n_splits
     test_size = config.val_size
     only_official = config.only_official
+    only_self = config.only_self
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     transforms = None
@@ -154,7 +155,7 @@ if __name__ == "__main__":
     shutil.rmtree(save_path)
     os.makedirs(save_path)
 
-    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_official=only_official)
+    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_self=only_self, only_official=only_official)
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
                                                                        transforms=transforms)
 

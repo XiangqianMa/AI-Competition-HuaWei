@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-from losses.CE_label_smooth import CrossEntropyLabelSmooth
+from losses.CE_label_smooth import CrossEntropyLabelSmooth, MultiLabelCrossEntropyLabelSmooth
 from losses.focal_loss import MultiFocalLoss
 
 
 class Loss(nn.Module):
-    def __init__(self, model_name, loss_name, num_classes):
+    def __init__(self, model_name, loss_name, num_parents_classes, num_children_classes):
         """
 
         :param model_name: 模型的名称；类型为str
@@ -22,9 +22,7 @@ class Loss(nn.Module):
             if loss_type == 'CrossEntropy':
                 loss_function = nn.CrossEntropyLoss()
             elif loss_type == 'SmoothCrossEntropy':
-                loss_function = CrossEntropyLabelSmooth(num_classes=num_classes)
-            elif loss_type == 'FocalLoss':
-                loss_function = MultiFocalLoss(gamma=2)
+                loss_function = MultiLabelCrossEntropyLabelSmooth(num_parents_classes, num_children_classes)
             else:
                 assert "loss: {} not support yet".format(self.loss_name)
 
@@ -47,7 +45,7 @@ class Loss(nn.Module):
             self.loss_module = torch.nn.DataParallel(self.loss_module)
             self.loss_module.cuda()
 
-    def forward(self, outputs, labels):
+    def forward(self, outputs, parent_labels, children_labesl):
         """
 
         :param outputs: 网络的输出，具体维度和网络有关
@@ -57,8 +55,8 @@ class Loss(nn.Module):
         losses = []
         # 计算每一个损失函数的损失值
         for i, l in enumerate(self.loss_struct):
-            if l['type'] in ['CrossEntropy', 'SmoothCrossEntropy', 'FocalLoss']:
-                loss = l['function'](outputs, labels)
+            if l['type'] in ['CrossEntropy', 'SmoothCrossEntropy']:
+                loss = l['function'](outputs, parent_labels, children_labesl)
                 effective_loss = l['weight'] * loss
                 losses.append(effective_loss)
                 self.log[i] = effective_loss.item()

@@ -39,3 +39,35 @@ class CrossEntropyLabelSmooth(nn.Module):
         # mean(0)表示缩减第0维，也就是按列求均值，得到维度为[num_classes]，得到该batch内每一个类别的损失，再求和
         loss = (- targets * log_probs).mean(0).sum()
         return loss
+
+
+class MultiLabelCrossEntropyLabelSmooth(nn.Module):
+    def __init__(self, num_parents_classes, num_children_classes, epsilon=0.1, use_gpu=True):
+        super(MultiLabelCrossEntropyLabelSmooth, self).__init__()
+        self.num_parents_classes = num_parents_classes
+        self.num_children_classes = num_children_classes
+        self.epsilon = epsilon
+        self.use_gpu = use_gpu
+        # 父类的损失函数
+        self.parent_cels = CrossEntropyLabelSmooth(self.num_parents_classes, self.epsilon, self.use_gpu)
+        self.children_cels = []
+        self.children_predicts_index = [[0, 9], [9, 23], [23, 25], [25, 31], [31, 54]]
+        # 各个子类的损失函数
+        for num in self.num_children_classes:
+            self.children_cels.append(CrossEntropyLabelSmooth(num, self.epsilon, self.use_gpu))
+
+    def forward(self, predicts, parent_targets, child_targets):
+        # 父类的损失
+        parent_predicts = predicts[:, 0:self.num_parents_classes]
+        parent_loss = self.parent_cels(parent_predicts, parent_targets)
+        # 依据真实父类标计算子类标的损失
+        children_loss = 0
+        for batch_index, parent_target in enumerate(parent_targets):
+            start_index = self.children_predicts_index[parent_target][0] + self.num_parents_classes
+            end_index = self.children_predicts_index[parent_target][1] + self.num_parents_classes
+            child_predict = predicts[batch_index, start_index:end_index].unsqueeze(0)
+            child_target = child_targets[batch_index].unsqueeze(0)
+            children_loss += self.children_cels[parent_target](child_predict, child_target)
+        children_loss /= parent_targets.size(0)
+        loss = parent_loss + children_loss
+        return loss

@@ -4,7 +4,7 @@ import argparse
 def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[416, 416], help='image size')
-    parser.add_argument('--batch_size', type=int, default=6, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=24, help='batch size')
     parser.add_argument('--epoch', type=int, default=30, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
@@ -21,7 +21,7 @@ def get_classify_config():
     parser.add_argument('--only_self', type=bool, default=False, help='only use self data or not.')
     parser.add_argument('--only_official', type=bool, default=False, help='only use official data or not.')
     # 用于训练的类别
-    parser.add_argument('--selected_labels', type=list, default=None, help='labels chosen of training.')
+    parser.add_argument('--selected_labels', type=list, default=[], help='labels chosen of training.')
     # cut_mix
     parser.add_argument('--cut_mix', type=bool, default=True, help='use cut mix or not.')
     parser.add_argument('--beta', type=float, default=1.0, help='beta of cut mix.')
@@ -31,7 +31,7 @@ def get_classify_config():
     parser.add_argument('--multi_scale_size', type=list, default=[[256, 256], [288, 288], [320, 320], [352, 352], [384, 384], [416, 416]], help='multi scale choice.')
     parser.add_argument('--multi_scale_interval', type=int, default=10, help='make a scale choice every [] iterations.')
     # 稀疏度训练
-    parser.add_argument('--sparsity', type=bool, default=True, help='use sparsity training or not.')
+    parser.add_argument('--sparsity', type=bool, default=False, help='use sparsity training or not.')
     parser.add_argument('--sparsity_scale', type=float, default=1e-2, help='sparsity scale.')
     parser.add_argument('--penalty_type', type=str, default='L1', help='penalty type.')
     # l1正则化
@@ -44,7 +44,9 @@ def get_classify_config():
     parser.add_argument('--drop_rate', type=float, default=0, help='dropout rate in classify module')
 
     # model hyper-parameters
-    parser.add_argument('--num_classes', type=int, default=54)
+    parser.add_argument('--num_classes', type=int, default=59)
+    parser.add_argument('--parent_num_classes', type=int, default=5)  # 父类数目
+    parser.add_argument('--children_num_classes', type=list, default=[9, 14, 2, 6, 23])  # 各个父类拥有的子类数目
     parser.add_argument('--lr', type=float, default=3e-4, help='init lr')
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
     # 学习率衰减策略

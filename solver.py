@@ -32,7 +32,7 @@ class Solver:
         outputs = self.model(images)
         return outputs
 
-    def cal_loss(self, predicts, targets, criterion):
+    def cal_loss(self, predicts, parent_targets, children_targets, criterion):
         ''' 根据真实类标和预测出的类标计算损失
         
         Args:
@@ -45,10 +45,11 @@ class Solver:
         Return:
             loss: 计算出的损失值
         '''
-        targets = targets.to(self.device)
-        return criterion(predicts, targets)
+        parent_targets = parent_targets.to(self.device)
+        children_targets = children_targets.to(self.device)
+        return criterion(predicts, parent_targets, children_targets)
 
-    def cal_loss_cutmix(self, predicts, targets_a, targets_b, lam, criterion):
+    def cal_loss_cutmix(self, predicts, parent_targets_a, parent_targets_b, children_target_a, children_target_b, lam, criterion):
         """计算使用cutmix时的损失
 
         Args:
@@ -60,9 +61,11 @@ class Solver:
         Return:
             loss: 计算出的损失值        
         """
-        targets_a = targets_a.to(self.device)
-        targets_b = targets_b.to(self.device)
-        return criterion(predicts, targets_a) * lam + criterion(predicts, targets_b) * (1. - lam)
+        parent_targets_a = parent_targets_a.to(self.device)
+        parent_targets_b = parent_targets_b.to(self.device)
+        children_targets_a = children_target_a.to(self.device)
+        children_targets_b = children_target_b.to(self.device)
+        return criterion(predicts, parent_targets_a, children_targets_a) * lam + criterion(predicts, parent_targets_b, children_targets_b) * (1. - lam)
 
     def backword(self, optimizer, loss, sparsity=None):
         ''' 实现网络的反向传播
