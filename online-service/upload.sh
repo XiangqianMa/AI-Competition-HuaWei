@@ -1,5 +1,5 @@
-# bucket_name=offline-model # zhangxin
-bucket_name=ai-competition-zhangxin
+bucket_name=offline-model # mxq
+# bucket_name=ai-competition-zhangxin
 model_name=se_resnext101_32x4d
 
 filename=`ls -l ../checkpoints/${model_name} | tail -n 1 | awk '{print $9}'`

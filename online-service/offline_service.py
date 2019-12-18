@@ -20,7 +20,10 @@ class ImageClassificationService:
         logger.info('Creating ImageClassificationService')
         self.model_name = model_name
         self.model_path = model_path
-        self.classes_num = 54
+        self.classes_num = 59
+        self.parent_classes = 5
+        self.children_num_classes = [9, 14, 2, 6, 23]
+        self.children_predicts_index = [[0, 9], [9, 23], [23, 25], [25, 31], [31, 54]]
 
         self.use_cuda = False
         self.label_id_name_dict = \
@@ -81,17 +84,19 @@ class ImageClassificationService:
                 "53": "美食/金线油塔"
             }        
         
-        self.model = self.__prepare()
-        print(self.model)
-        self.model.eval()
+        self.parent_name_to_label, self.children_name_to_label = self.get_multi_name_to_label()
+        # 类标到真实类别的转换
+        self.parent_label_to_name, self.children_label_to_name = self.get_label_to_name()
 
+        self.model = self.__prepare()
+        self.model.eval()
         self.normalize = transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225]
         )
 
         self.transforms = transforms.Compose([
-            transforms.Resize([256, 256]),
+            transforms.Resize([416, 416]),
             transforms.ToTensor(),
             self.normalize
         ])
@@ -142,18 +147,22 @@ class ImageClassificationService:
         # 对单张样本得到预测结果
         img = data["input_img"]
         img = img.unsqueeze(0)
-        print(img.size())
         if self.use_cuda:
             img = img.cuda()
-        print(img.device)
         with torch.no_grad():
-            pred_score = self.model(img)
-            pred_score = F.softmax(pred_score.data, dim=1)
-            if pred_score is not None:
-                pred_label = torch.argsort(pred_score[0], descending=True)[:1][0].item()
-                result = {'result': self.label_id_name_dict[str(pred_label)]}
-            else:
-                result = {'result': 'predict score is None'}
+            predict = self.model(img).squeeze()
+            parent_predict = predict[:self.parent_classes]
+            parent_scores = F.softmax(parent_predict.data)
+            predict_parent_label = torch.argmax(parent_scores).item()
+            start_index = self.children_predicts_index[predict_parent_label][0] + self.parent_classes
+            end_index = self.children_predicts_index[predict_parent_label][1] + self.parent_classes
+            child_predict = predict[start_index:end_index]
+            child_scores = F.softmax(child_predict.data)
+            predict_child_label = torch.argmax(child_scores).item()
+        parent_name = self.parent_label_to_name[predict_parent_label]
+        child_name = self.children_label_to_name[parent_name][predict_child_label]
+        final_name = parent_name + '/' + child_name
+        result = {'result': final_name}
 
         return result
 
@@ -163,9 +172,16 @@ class ImageClassificationService:
         prepare_model = PrepareModel()
         model = prepare_model.create_model('se_resnext101_32x4d', self.classes_num, drop_rate=0, pretrained=False)
 
-        print('Using CPU for inference')
-        checkpoint = torch.load(self.model_path, map_location='cpu')
-        model.load_state_dict(checkpoint['state_dict'])
+        if torch.cuda.is_available():
+            logger.info('Using GPU for inference')
+            self.use_cuda = True
+            checkpoint = torch.load(self.model_path)
+            model.load_state_dict(checkpoint['state_dict'])
+            model = torch.nn.DataParallel(model).cuda()
+        else:
+            logger.info('Using CPU for inference')
+            checkpoint = torch.load(self.model_path, map_location='cpu')
+            model.load_state_dict(checkpoint['state_dict'])
 
         return model
 
@@ -185,11 +201,55 @@ class ImageClassificationService:
         """
         return data
 
+    def get_label_to_name(self):
+        """获得由类别转换为真实名称的字典
+        
+        Returns:
+            parent_label_to_name: {0: ‘工艺品’，....}
+            children_label_to_name: {'工艺品': {0: '仿唐三彩', ...}, ...}
+        """
+        # 父类的类别到名称
+        parent_label_to_name = {}
+        for name, label in self.parent_name_to_label.items():
+            parent_label_to_name[label] = name
+        # 子类的类别到名称
+        children_label_to_name = {}
+        for parent_label, children_name_to_label in self.children_name_to_label.items():
+            label_to_name = {}
+            for name, label in children_name_to_label.items():
+                label_to_name[label] = name
+            children_label_to_name[parent_label_to_name[parent_label]] = label_to_name
+        return parent_label_to_name, children_label_to_name
+
+    def get_multi_name_to_label(self):
+        """多级真实类别到类标的映射
+
+        Returns:
+            parent_name_to_label: dir, {'工艺品': 0, '美食': 1, ...}
+            parent_to_childern_label: dir, {'1': {'酥饺': 0, '凉鱼': 1, ....}, '工艺品': {'景泰蓝': 0, ...}, ...}
+        """
+        parent_to_childern = {}
+        for label in self.label_id_name_dict.values():
+            parent, children = label.split('/')
+            if parent not in parent_to_childern.keys():
+                parent_to_childern[parent] = [children]
+            else:
+                parent_to_childern[parent].append(children)
+        parent_name = sorted(parent_to_childern.keys())
+        parent_name_to_label = {name:index for index, name in enumerate(parent_name)}
+        parent_to_childern_label = {}
+        for parent_name, children_name in parent_to_childern.items():
+            parent_label = parent_name_to_label[parent_name]
+            children_name = sorted(children_name)
+            children_name_to_label = {name:index for index, name in enumerate(children_name)}
+            parent_to_childern_label[parent_label] = children_name_to_label
+        return parent_name_to_label, parent_to_childern_label
+
 
 if __name__ == "__main__":
     data = {}
-    data['input_img'] = {'1': '../data/huawei_data/train_data/img_1.jpg'}
-    model_path = 'model/model_best.pth'
-    image_classify_service = ImageClassificationService('resnet50', model_path)
+    data['input_img'] = {'1': '/media/mxq/data/competition/HuaWei/train_data/img_4536.jpg'}
+    model_path = '/media/mxq/project/Projects/competition/HuaWei/AI-Competition-HuaWei/checkpoints/se_resnext101_32x4d/model_best.pth'
+    image_classify_service = ImageClassificationService('se_resnext101_32x4d', model_path)
     result = image_classify_service.inference(data)
     print(result)
