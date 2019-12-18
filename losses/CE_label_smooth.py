@@ -42,7 +42,7 @@ class CrossEntropyLabelSmooth(nn.Module):
 
 
 class MultiLabelCrossEntropyLabelSmooth(nn.Module):
-    def __init__(self, num_parents_classes, num_children_classes, epsilon=0.1, use_gpu=True):
+    def __init__(self, num_parents_classes, num_children_classes, children_predicts_index, epsilon=0.1, use_gpu=True):
         super(MultiLabelCrossEntropyLabelSmooth, self).__init__()
         self.num_parents_classes = num_parents_classes
         self.num_children_classes = num_children_classes
@@ -51,7 +51,7 @@ class MultiLabelCrossEntropyLabelSmooth(nn.Module):
         # 父类的损失函数
         self.parent_cels = CrossEntropyLabelSmooth(self.num_parents_classes, self.epsilon, self.use_gpu)
         self.children_cels = []
-        self.children_predicts_index = [[0, 9], [9, 23], [23, 25], [25, 31], [31, 54]]
+        self.children_predicts_index = children_predicts_index
         # 各个子类的损失函数
         for num in self.num_children_classes:
             self.children_cels.append(CrossEntropyLabelSmooth(num, self.epsilon, self.use_gpu))

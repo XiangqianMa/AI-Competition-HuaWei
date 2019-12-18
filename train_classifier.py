@@ -102,7 +102,7 @@ class TrainVal:
         )
 
         # 加载损失函数
-        self.criterion = Loss(config.model_type, config.loss_name, self.parent_num_classes, self.children_num_classes)
+        self.criterion = Loss(config.model_type, config.loss_name, self.parent_num_classes, self.children_num_classes, self.children_predicts_index)
 
         # 实例化实现各种子函数的 solver 类
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -115,7 +115,6 @@ class TrainVal:
         # 初始化分类度量准则类
         with open("online-service/model/label_id_name.json", 'r', encoding='utf-8') as json_file:
             self.class_names = list(json.load(json_file).values())
-        self.classification_metric = ClassificationMetric(self.class_names, self.model_path)
 
         self.max_accuracy_valid = 0
 

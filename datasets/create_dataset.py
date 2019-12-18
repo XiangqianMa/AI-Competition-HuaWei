@@ -256,11 +256,11 @@ class GetDataloader(object):
         skf = StratifiedKFold(n_splits=self.folds_split, shuffle=True, random_state=69)
         train_folds = []
         val_folds = []
-        for train_index, val_index in skf.split(self.samples, self.child_labels):
-            train_samples = ([self.samples[i] for i in train_index])
+        for train_index, val_index in skf.split(self.samples, self.parent_labels):
+            train_samples = [self.samples[i] for i in train_index]
             train_parent_labels = [self.parent_labels[i] for i in train_index]
             train_child_labels = [self.child_labels[i] for i in train_index]
-            val_samples = ([self.samples[i] for i in val_index])
+            val_samples = [self.samples[i] for i in val_index]
             val_parent_labels = [self.parent_labels[i] for i in val_index]
             val_child_labels = [self.child_labels[i] for i in val_index]
             train_folds.append([train_samples, train_parent_labels, train_child_labels])

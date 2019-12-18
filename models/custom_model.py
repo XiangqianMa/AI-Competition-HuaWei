@@ -82,11 +82,14 @@ class CustomModel(nn.Module):
 
         Args:
             outputs: 网络的预测标签，维度为[batch_size, num_classes]
-            labels: 真实标签，维度为[batch_size, num_classes]
+            parent_labels: 父类真实标签，维度为[batch_size, num_classes]
+            children_labels: 各个父类对应的子类的真实标签
+            parent_num_classes: 父类的类别数目
+            children_predicts_index: 各个父类对应的子类在预测向量里的下标范围
             device: 当前设备
 
-        Returns: 预测对了多少个样本
-
+        Returns:
+            predict_results: tensor, [1, 0, 1, 0, ...], 1表示当前batch对应位置的样本预测正确，0为预测错误
         """
         parent_labels = parent_labels.to(device)
         children_labels = children_labels.to(device)
@@ -95,7 +98,9 @@ class CustomModel(nn.Module):
         parent_predict = parent_outputs.max(dim=1)[1]
         predict_results = torch.zeros(outputs.size(0))
         for batch_index in range(outputs.size(0)):
+            # 当前样本真实父类标
             parent_label = parent_labels[batch_index]
+            # 预测的父类标
             predict_predict_label = parent_predict[batch_index]
             if predict_predict_label == parent_label:
                 # 当父类预测正确时才计算子类
@@ -103,6 +108,7 @@ class CustomModel(nn.Module):
                 end_index = children_predicts_index[parent_label][1] + parent_num_classes
                 child_output = F.softmax(outputs[batch_index, start_index:end_index])
                 child_predict = child_output.argmax()
+                # 子类也预测正确才记为正确
                 if child_predict == children_labels[batch_index]:
                     predict_results[batch_index] = 1
                 else:

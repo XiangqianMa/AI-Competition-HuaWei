@@ -38,9 +38,9 @@ class Solver:
         Args:
             predicts: 网络的预测输出，具体维度和self.model有关，对我们任务而言：
                 若为分类模型，则维度为[batch_size, class_num, 1, 1]，预测出的数据
-            targets: 真实类标，具体维度和self.model有关，对我们任务而言：
+            parent_targets: 父类真实类标，具体维度和self.model有关，对我们任务而言：
                 若为分类模型，则维度为[batch_size, class_num]，真实类标，One-hot数据
-
+            children_targets: 子类真实类标
             criterion: 使用的损失函数
         Return:
             loss: 计算出的损失值
@@ -54,8 +54,10 @@ class Solver:
 
         Args:
             predicts: 网络的预测输出
-            targets_a: 类标a
-            targets_b: 类标b
+            parent_targets_a: 父类标a
+            parent_targets_b: 父类标b
+            children_target_a: 子类标a 
+            children_target_b: 子类标b
             lam: lambda参数
             criterion: 损失函数
         Return:

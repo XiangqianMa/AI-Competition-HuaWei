@@ -5,12 +5,14 @@ from losses.focal_loss import MultiFocalLoss
 
 
 class Loss(nn.Module):
-    def __init__(self, model_name, loss_name, num_parents_classes, num_children_classes):
+    def __init__(self, model_name, loss_name, num_parents_classes, num_children_classes, children_predicts_index):
         """
 
         :param model_name: 模型的名称；类型为str
         :param loss_name: 损失的名称；类型为str
-        :param num_classes: 网络的参数
+        :param num_parents_classes: 父类类别数目
+        :param num_children_classes: list, 各父类对应的子类类别数目
+        :param children_predicts_index: list, [[5, 6], [6, 11], [], ...], 各个父类对应的子类在网络输出向量中对应的下标起始位置和结束尾后位置
         """
         super(Loss, self).__init__()
         self.model_name = model_name
@@ -22,7 +24,7 @@ class Loss(nn.Module):
             if loss_type == 'CrossEntropy':
                 loss_function = nn.CrossEntropyLoss()
             elif loss_type == 'SmoothCrossEntropy':
-                loss_function = MultiLabelCrossEntropyLabelSmooth(num_parents_classes, num_children_classes)
+                loss_function = MultiLabelCrossEntropyLabelSmooth(num_parents_classes, num_children_classes, children_predicts_index)
             else:
                 assert "loss: {} not support yet".format(self.loss_name)
 
@@ -45,18 +47,20 @@ class Loss(nn.Module):
             self.loss_module = torch.nn.DataParallel(self.loss_module)
             self.loss_module.cuda()
 
-    def forward(self, outputs, parent_labels, children_labesl):
+    def forward(self, outputs, parent_labels, children_labels):
         """
 
         :param outputs: 网络的输出，具体维度和网络有关
         :param labels: 数据的真实类标，具体维度和网络有关
+        :param parent_labels: 父类标
+        :param children_labels: 各个父类标对应的子类标
         :return loss_sum: 损失函数之和，未经过item()函数，可用于反向传播
         """
         losses = []
         # 计算每一个损失函数的损失值
         for i, l in enumerate(self.loss_struct):
             if l['type'] in ['CrossEntropy', 'SmoothCrossEntropy']:
-                loss = l['function'](outputs, parent_labels, children_labesl)
+                loss = l['function'](outputs, parent_labels, children_labels)
                 effective_loss = l['weight'] * loss
                 losses.append(effective_loss)
                 self.log[i] = effective_loss.item()
