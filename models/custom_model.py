@@ -4,6 +4,7 @@ import pretrainedmodels
 import torch.nn.functional as F
 from efficientnet_pytorch import EfficientNet
 import models.resnext as resnext
+from models.res2net import res2net101_26w_4s
 
 
 class CustomModel(nn.Module):

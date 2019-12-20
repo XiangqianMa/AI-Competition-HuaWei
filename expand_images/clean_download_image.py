@@ -9,7 +9,7 @@ import cv2
 ###################################################
 
 # 数据集存放路径
-image_path = "/media/mxq/data/competition/HuaWei/下载的图片/download_images_huge"
+image_path = "/media/mxq/data/competition/HuaWei/google"
 # 数据集路径下是否有子文件夹，有则设置该参数为True，否则为False
 sub_dir_exit = False
 # 目标格式

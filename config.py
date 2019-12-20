@@ -4,7 +4,7 @@ import argparse
 def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[416, 416], help='image size')
-    parser.add_argument('--batch_size', type=int, default=6, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=24, help='batch size')
     parser.add_argument('--epoch', type=int, default=30, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
@@ -31,7 +31,7 @@ def get_classify_config():
     parser.add_argument('--multi_scale_size', type=list, default=[[256, 256], [288, 288], [320, 320], [352, 352], [384, 384], [416, 416]], help='multi scale choice.')
     parser.add_argument('--multi_scale_interval', type=int, default=10, help='make a scale choice every [] iterations.')
     # 稀疏度训练
-    parser.add_argument('--sparsity', type=bool, default=True, help='use sparsity training or not.')
+    parser.add_argument('--sparsity', type=bool, default=False, help='use sparsity training or not.')
     parser.add_argument('--sparsity_scale', type=float, default=1e-2, help='sparsity scale.')
     parser.add_argument('--penalty_type', type=str, default='L1', help='penalty type.')
     # l1正则化
@@ -47,6 +47,11 @@ def get_classify_config():
     parser.add_argument('--num_classes', type=int, default=54)
     parser.add_argument('--lr', type=float, default=3e-4, help='init lr')
     parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
+    parser.add_argument('--warmup', type=bool, default=False, help='use warmup or not')
+    parser.add_argument('--multiplier', type=float, default=10, help='when warm up ends, lr will be: lr * multiplier')
+    parser.add_argument('--warmup_epoch', type=int, default=10, help='warm up epoch')
+
+    
     # 学习率衰减策略
     parser.add_argument('--lr_scheduler', type=str, default='StepLR',
                         help='lr scheduler, StepLR/CosineLR/ReduceLR/MultiStepLR')
@@ -54,7 +59,7 @@ def get_classify_config():
     parser.add_argument('--restart_step', type=int, default=80, help='T_max for CosineAnnealingLR scheduler')
     parser.add_argument('--multi_step', type=list, default=[20, 35, 45], help='Milestone of multi_step')
     # 优化器
-    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type')
+    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type: Adam/SGD/RAdam')
     # 损失函数
     parser.add_argument('--loss_name', type=str, default='1.0*SmoothCrossEntropy',
                         help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss')

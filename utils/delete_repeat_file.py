@@ -15,7 +15,7 @@ def get_md5(filename):
 
 
 if __name__ == '__main__':
-    ipath = "data/huawei_data/combine"
+    ipath = "/media/mxq/data/competition/HuaWei/combine_google"
 
     filenames = [file for file in os.listdir(ipath) if file.endswith('jpg')]
     md5_dir = {}

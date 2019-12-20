@@ -3,6 +3,8 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from models.custom_model import CustomModel
 from models.custom_attention_model import CustomLocalAttentionModel
+from utils.radam import RAdam
+from utils.warmup_scheduler import GradualWarmupScheduler
 
 
 class PrepareModel:
@@ -64,6 +66,13 @@ class PrepareModel:
                     {'params': base_params, 'lr': 0.1 * config.lr},
                     {'params': model.module.classifier.parameters(), 'lr': config.lr}
                 ], weight_decay=config.weight_decay, momentum=0.9)
+        elif config.optimizer == 'RAdam':
+            optimizer = RAdam(
+                [
+                    {'params': base_params, 'lr': 0.1 * config.lr},
+                    {'params': model.module.classifier.parameters(), 'lr': config.lr}                    
+                ], weight_decay=config.weight_decay
+            )
 
         return optimizer
 
@@ -73,13 +82,19 @@ class PrepareModel:
             optimizer,
             step_size=None,
             restart_step=None,
-            multi_step=None
+            multi_step=None,
+            warmup=False,
+            multiplier=None,
+            warmup_epoch=None
     ):
         """创建学习率衰减器
         Args:
             lr_scheduler_type: 衰减器类型
             optimizer: 优化器
             step_size: 使用StepLR时，必须指定该参数
+            warmup: 是否使用warmup
+            multiplier: 在warmup轮数结束后，学习率变为初始学习率的multiplier倍
+            warmup_epoch: warmup的轮数
         Return:
             my_lr_scheduler: 学习率衰减器
         """
@@ -98,6 +113,10 @@ class PrepareModel:
             my_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, multi_step)            
         elif lr_scheduler_type == 'ReduceLR':
             my_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=5)
+        if warmup:
+            if not warmup_epoch or multiplier:
+                raise ValueError('warup_epoch and multiplier must be specified when warmup is true.')
+            my_lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=multiplier, total_epoch=warmup_epoch, after_scheduler=my_lr_scheduler)
         return my_lr_scheduler
 
     def load_chekpoint(self, model, weight_path):
