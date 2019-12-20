@@ -168,19 +168,35 @@ class ValDataset(Dataset):
 
 
 class GetDataloader(object):
-    def __init__(self, data_root, folds_split=1, test_size=None, label_names_path='data/huawei_data/label_id_name.json', only_self=False, only_official=False, selected_labels=None):
+    def __init__(
+        self, 
+        data_root, 
+        folds_split=1, 
+        test_size=None, 
+        label_names_path='data/huawei_data/label_id_name.json', 
+        only_self=False, 
+        only_official=False, 
+        val_official=False, 
+        selected_labels=None,
+        load_split_from_file=None
+        ):
         """
         Args:
             data_root: str, 数据集根目录
             folds_split: int, 划分为几折
             test_size: 验证集占的比例, [0, 1]
+            label_names_path: 存放类别与真实名称对应关系的文件
+            only_self: 只是用额外添加的数据
+            only_official: 只使用官方的数据
+            val_official: bool, 在验证集中是否只是用官方的数据集
             selected_labels: list，被选中用于训练的类别
+            load_split_from_file: str, 存放数据集划分的文件的路径，如果存在则从文件加载，否则在线生成
         """
         self.data_root = data_root
         self.folds_split = folds_split
         self.selected_labels = selected_labels
         if self.selected_labels:
-            print('Selected Labels: ', self.selected_labels)
+            print('@ Selected Labels: ', self.selected_labels)
         with open(label_names_path, 'r') as f:
             self.label_to_name = json.load(f)
 
@@ -188,7 +204,10 @@ class GetDataloader(object):
         self.test_size = test_size
         self.only_self = only_self
         self.only_official = only_official
-
+        self.val_official = val_official
+        if self.val_official:
+            print('@ Only using official data in validate dataset.')
+        self.load_split_from_file = load_split_from_file
         if folds_split == 1:
             if not test_size:
                 raise ValueError('You must specified test_size when folds_split equal to 1.')
@@ -309,10 +328,18 @@ class GetDataloader(object):
             train_list: list, 每一个数据均为[train_sample, train_label], train_sample: list, 样本名称， train_label: list, 样本类标
             val_list: list, 每一个数据均为[val_sample, val_label]， val_sample: list, 样本名称， val_label: list, 样本类标
         """
-        if self.folds_split == 1:
-            train_list, val_list = self.get_data_split_single()
+        if self.load_split_from_file:
+            print('@ Loading dataset split from %s' % self.load_split_from_file)
+            with open(self.load_split_from_file, 'r') as f:
+                train_list, val_list = json.load(f)
         else:
-            train_list, val_list = self.get_data_split_folds()
+            if self.folds_split == 1:
+                train_list, val_list = self.get_data_split_single()
+            else:
+                train_list, val_list = self.get_data_split_folds()
+            with open('./dataset_split.json', 'w') as f:
+                print('@ Writing to dataset_split.json')
+                json.dump(f, [train_list, val_list])
 
         return train_list, val_list
         
@@ -322,12 +349,32 @@ class GetDataloader(object):
             [train_samples, train_labels], train_samples: list, 样本名称， train_labels: list, 样本类标
             [val_samples, val_labels], val_samples: list, 样本名称， val_labels: list, 样本类标
         """
-        samples_index = [i for i in range(len(self.samples))]
+        # 待划分的样本和类标
+        split_samples = []
+        split_labels = []
+        # 不参与划分的样本和类标
+        unsplit_samples = []
+        unsplit_labels = []
+        if self.val_official:
+            # 如果在验证集中只使用官方的数据集
+            for sample_index, sample in enumerate(self.samples):
+                if 'img' in sample:
+                    split_samples.append(sample)
+                    split_labels.append(self.labels[sample_index])
+                else:
+                    unsplit_samples.append(sample)
+                    unsplit_labels.append(self.labels[sample_index])
+        else:
+            split_samples, split_labels = self.samples, self.labels
+            unsplit_samples, unsplit_labels = [], []
+        samples_index = [i for i in range(len(split_samples))]
         train_index, val_index = train_test_split(samples_index, test_size=self.test_size, random_state=69)
-        train_samples = [self.samples[i] for i in train_index]
-        train_labels = [self.labels[i] for i in train_index]
-        val_samples = [self.samples[i] for i in val_index]
-        val_labels = [self.labels[i] for i in val_index]
+        train_samples = [split_samples[i] for i in train_index]
+        train_labels = [split_labels[i] for i in train_index]
+        train_samples.extend(unsplit_samples)
+        train_labels.extend(unsplit_labels)
+        val_samples = [split_samples[i] for i in val_index]
+        val_labels = [split_labels[i] for i in val_index]
         return [[train_samples, train_labels]], [[val_samples, val_labels]]
     
     def get_data_split_folds(self):
@@ -339,11 +386,32 @@ class GetDataloader(object):
         skf = StratifiedKFold(n_splits=self.folds_split, shuffle=True, random_state=69)
         train_folds = []
         val_folds = []
-        for train_index, val_index in skf.split(self.samples, self.labels):
-            train_samples = ([self.samples[i] for i in train_index])
-            train_labels = ([self.labels[i] for i in train_index])
-            val_samples = ([self.samples[i] for i in val_index])
-            val_labels = ([self.labels[i] for i in val_index])
+        # 待划分的样本和类标
+        split_samples = []
+        split_labels = []
+        # 不参与划分的样本和类标
+        unsplit_samples = []
+        unsplit_labels = []
+        if self.val_official:
+            # 如果在验证集中只使用官方的数据集
+            for sample_index, sample in enumerate(self.samples):
+                if 'img' in sample:
+                    split_samples.append(sample)
+                    split_labels.append(self.labels[sample_index])
+                else:
+                    unsplit_samples.append(sample)
+                    unsplit_labels.append(self.labels[sample_index])
+        else:
+            split_samples, split_labels = self.samples, self.labels
+            unsplit_samples, unsplit_labels = [], []
+        for train_index, val_index in skf.split(split_samples, split_labels):
+            train_samples = ([split_samples[i] for i in train_index])
+            train_labels = ([split_labels[i] for i in train_index])
+            # 将未参与划分的样本全部放入训练集
+            train_samples.extend(unsplit_samples)
+            train_labels.extend(unsplit_labels)
+            val_samples = ([split_samples[i] for i in val_index])
+            val_labels = ([split_labels[i] for i in val_index])
             train_folds.append([train_samples, train_labels])
             val_folds.append([val_samples, val_labels])
         return train_folds, val_folds
@@ -395,14 +463,14 @@ def multi_scale_transforms(image_size, images, mean=(0.485, 0.456, 0.406), std=(
     
 
 if __name__ == "__main__":
-    data_root = 'data/huawei_data/train_data'
+    data_root = 'data/huawei_data/combine_delele_repet'
     folds_split = 1
     test_size = 0.2
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
-    get_dataloader = GetDataloader(data_root, folds_split=1, test_size=test_size)
+    get_dataloader = GetDataloader(data_root, folds_split=5, test_size=test_size, val_official=True)
     train_list, val_list = get_dataloader.get_split()
-    train_dataset = TrainDataset(data_root, train_list[0], train_list[1], size=[224, 224], mean=mean, std=std)
+    train_dataset = TrainDataset(data_root, train_list[0][0], train_list[0][1], size=[224, 224], mean=mean, std=std)
     for i in range(len(train_dataset)):
         image, label = train_dataset[i]
     pass

@@ -13,7 +13,10 @@ def get_classify_config():
                         help='probability of random erase when augmentation_flag is True')
     parser.add_argument('--gray_prob', type=float, default=0.3,
                         help='probability of gray when augmentation_flag is True')
+    # 数据集划分
+    parser.add_argument('--load_split_from_file', type=str, default='', help='loading dataset split from load_split_from_file， if '' , generate online.' )
     parser.add_argument('--n_splits', type=int, default=5, help='n_splits_fold')
+    parser.add_argument('--val_official', type=bool, default=False, help='only use official data in validate dataset or not.')
     parser.add_argument('--selected_fold', type=list, default=[0], help='which folds for training')
     parser.add_argument('--val_size', type=float, default=0.2, help='the ratio of val data when n_splits=1.')
     parser.add_argument('--weight_path', type=str, default='', help='the pretrained weight path.')

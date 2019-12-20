@@ -53,10 +53,10 @@ class TrainVal:
         self.penalty_type = config.penalty_type
         self.selected_labels = config.selected_labels
         if self.cut_mix:
-            print('Using cut mix.')
+            print('@ Using cut mix.')
         if self.multi_scale:
-            print('Using multi scale training.')
-        print('USE LOSS: {}'.format(config.loss_name))
+            print('@ Using multi scale training.')
+        print('@ Using LOSS: {}'.format(config.loss_name))
 
         # 加载模型
         prepare_model = PrepareModel()
@@ -72,14 +72,14 @@ class TrainVal:
         # 稀疏训练
         self.sparsity_train = None
         if config.sparsity:
-            print('Using sparsity training.')
+            print('@ Using sparsity training.')
             self.sparsity_train = Sparsity(self.model, sparsity_scale=self.sparsity_scale, penalty_type=self.penalty_type)
         
         # l1正则化
         self.l1_regular = config.l1_regular
         self.l1_decay = config.l1_decay
         if self.l1_regular:
-            print('Using l1_regular')
+            print('@ Using l1_regular')
             self.l1_reg_loss = Regularization(self.model, weight_decay=self.l1_decay, p=1)
             
         if torch.cuda.is_available():
@@ -235,7 +235,7 @@ class TrainVal:
 
             # 每一个epoch完毕之后，执行学习率衰减
             if self.lr_scheduler == 'ReduceLR':
-                self.exp_lr_scheduler.step(val_loss)
+                self.exp_lr_scheduler.step(metrics=val_loss)
             else:
                 self.exp_lr_scheduler.step()
             global_step += len(train_loader)
@@ -318,6 +318,8 @@ if __name__ == "__main__":
     only_self = config.only_self
     only_official = config.only_official
     multi_scale = config.multi_scale
+    val_official = config.val_official
+    load_split_from_file = config.load_split_from_file
     selected_labels = config.selected_labels
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
@@ -325,7 +327,16 @@ if __name__ == "__main__":
         transforms = DataAugmentation(config.erase_prob, full_aug=True, gray_prob=config.gray_prob)
     else:
         transforms = None
-    get_dataloader = GetDataloader(data_root, folds_split=folds_split, test_size=test_size, only_self=only_self, only_official=only_official, selected_labels=selected_labels)
+    get_dataloader = GetDataloader(
+        data_root, 
+        folds_split=folds_split, 
+        test_size=test_size, 
+        only_self=only_self, 
+        only_official=only_official, 
+        selected_labels=selected_labels,
+        val_official=val_official,
+        load_split_from_file=load_split_from_file
+        )
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
                                                                        transforms=transforms, multi_scale=multi_scale)
 
