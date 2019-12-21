@@ -122,10 +122,30 @@ class DataAugmentation(object):
         Return:
             image_aug: 增强后的图片
         """
+        original_height, original_width = original_image.shape[:2]
         augmentations = Compose([
             HorizontalFlip(p=0.5),
-            VerticalFlip(p=0.25),
-            ShiftScaleRotate(shift_limit=0.07, rotate_limit=10, p=0.4),
+            VerticalFlip(p=0.3),
+            ShiftScaleRotate(shift_limit=0.07, rotate_limit=15, p=0.5),
+            CenterCrop(p=0.3, height=original_height, width=original_width),
+            # 直方图均衡化
+            CLAHE(p=0.4),
+
+            # 亮度、对比度
+            RandomGamma(gamma_limit=(50, 80), p=0.3),
+            RandomBrightnessContrast(p=0.3),
+            
+            # 模糊
+            OneOf([
+                    MotionBlur(p=0.1),
+                    MedianBlur(blur_limit=3, p=0.1),
+                    Blur(blur_limit=3, p=0.1),
+                ], p=0.3),
+            
+            OneOf([
+                    IAAAdditiveGaussianNoise(),
+                    GaussNoise(),
+                ], p=0.2)
         ])
         
         augmented = augmentations(image=original_image)
@@ -137,7 +157,7 @@ class DataAugmentation(object):
 if __name__ == "__main__":
     image_path = 'data/huawei_data/train_data'
     # augment = DataAugmentation(erase_flag=True, full_aug=True, gray=True)
-    augment = DataAugmentation(erase_prob=1.0, gray_prob=1.0)
+    augment = DataAugmentation(erase_prob=0.0, gray_prob=0.0)
     images_name = [f for f in os.listdir(image_path) if f.endswith('jpg')]
     for image_name in images_name:
         plt.figure()
@@ -146,4 +166,6 @@ if __name__ == "__main__":
         augmented = augment(image=image)
 
         plt.imshow(augmented)
-        plt.show()
+        plt.ion()
+        plt.pause(0.2)  #显示秒数
+        plt.close()
