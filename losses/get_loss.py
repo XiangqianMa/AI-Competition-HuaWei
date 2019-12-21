@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from losses.CE_label_smooth import CrossEntropyLabelSmooth
+from losses.CE_label_smooth import CrossEntropyLabelSmooth, CrossEntropyLabelSmoothHardMining
 from losses.focal_loss import MultiFocalLoss
 
 
@@ -23,6 +23,8 @@ class Loss(nn.Module):
                 loss_function = nn.CrossEntropyLoss()
             elif loss_type == 'SmoothCrossEntropy':
                 loss_function = CrossEntropyLabelSmooth(num_classes=num_classes)
+            elif loss_type == 'SmoothCrossEntropyHardMining':
+                loss_function = CrossEntropyLabelSmoothHardMining(num_classes=num_classes)
             elif loss_type == 'FocalLoss':
                 loss_function = MultiFocalLoss(gamma=2)
             else:
@@ -57,7 +59,7 @@ class Loss(nn.Module):
         losses = []
         # 计算每一个损失函数的损失值
         for i, l in enumerate(self.loss_struct):
-            if l['type'] in ['CrossEntropy', 'SmoothCrossEntropy', 'FocalLoss']:
+            if l['type'] in ['CrossEntropy', 'SmoothCrossEntropy', 'FocalLoss', 'SmoothCrossEntropyHardMining']:
                 loss = l['function'](outputs, labels)
                 effective_loss = l['weight'] * loss
                 losses.append(effective_loss)

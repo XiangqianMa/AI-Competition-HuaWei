@@ -160,7 +160,7 @@ class ImageClassificationService(PTServingBaseService):
                 result = {'result': self.label_id_name_dict[str(pred_label)]}
             else:
                 result = {'result': 'predict score is None'}
-
+        logger.info('result:' + str(pred_label))
         return result
 
     def __prepare(self):

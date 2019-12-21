@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info('from model.deploy_models.build_model import PrepareModel')
 
-from model.deploy_models.build_model import PrepareModel
+from models.build_model import PrepareModel
 
 
 class ImageClassificationService:
@@ -154,7 +154,7 @@ class ImageClassificationService:
                 result = {'result': self.label_id_name_dict[str(pred_label)]}
             else:
                 result = {'result': 'predict score is None'}
-
+        logger.info(result['result'])
         return result
 
     def __prepare(self):
@@ -188,8 +188,8 @@ class ImageClassificationService:
 
 if __name__ == "__main__":
     data = {}
-    data['input_img'] = {'1': '../data/huawei_data/train_data/img_1.jpg'}
-    model_path = 'model/model_best.pth'
+    data['input_img'] = {'1': 'data/huawei_data/train_data/img_1.jpg'}
+    model_path = 'checkpoints/se_resnext101_32x4d/log-2019-12-08T22-39-47-0.9740/model_best.pth'
     image_classify_service = ImageClassificationService('resnet50', model_path)
     result = image_classify_service.inference(data)
     print(result)

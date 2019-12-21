@@ -49,12 +49,11 @@ def get_classify_config():
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
     parser.add_argument('--lr', type=float, default=3e-4, help='init lr')
-    parser.add_argument('--weight_decay', type=float, default=5e-4, help='weight_decay in optimizer')
+    parser.add_argument('--weight_decay', type=float, default=0.0, help='weight_decay in optimizer')
     parser.add_argument('--warmup', type=bool, default=False, help='use warmup or not')
     parser.add_argument('--multiplier', type=float, default=10, help='when warm up ends, lr will be: lr * multiplier')
     parser.add_argument('--warmup_epoch', type=int, default=10, help='warm up epoch')
 
-    
     # 学习率衰减策略
     parser.add_argument('--lr_scheduler', type=str, default='StepLR',
                         help='lr scheduler, StepLR/CosineLR/ReduceLR/MultiStepLR')
@@ -65,7 +64,7 @@ def get_classify_config():
     parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type: Adam/SGD/RAdam')
     # 损失函数
     parser.add_argument('--loss_name', type=str, default='1.0*SmoothCrossEntropy',
-                        help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss')
+                        help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss/SmoothCrossEntropyHardMining')
 
     # 路径
     parser.add_argument('--save_path', type=str, default='./checkpoints')
