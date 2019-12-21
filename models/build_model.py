@@ -112,9 +112,9 @@ class PrepareModel:
                 raise ValueError('You must specified multi step when you are using MultiStepLR.')
             my_lr_scheduler = lr_scheduler.MultiStepLR(optimizer, multi_step)            
         elif lr_scheduler_type == 'ReduceLR':
-            my_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=5)
+            my_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=10)
         if warmup:
-            if not warmup_epoch or multiplier:
+            if not warmup_epoch or not multiplier:
                 raise ValueError('warup_epoch and multiplier must be specified when warmup is true.')
             my_lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=multiplier, total_epoch=warmup_epoch, after_scheduler=my_lr_scheduler)
         return my_lr_scheduler

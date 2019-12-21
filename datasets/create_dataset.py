@@ -339,7 +339,7 @@ class GetDataloader(object):
                 train_list, val_list = self.get_data_split_folds()
             with open('./dataset_split.json', 'w') as f:
                 print('@ Writing to dataset_split.json')
-                json.dump(f, [train_list, val_list])
+                json.dump([train_list, val_list], f)
 
         return train_list, val_list
         
