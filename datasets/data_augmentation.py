@@ -1,13 +1,14 @@
 import math
 import random
 import numpy as np
+import json
 import torchvision.transforms as T
 from albumentations import (
     Compose, HorizontalFlip, VerticalFlip, CLAHE, RandomRotate90, HueSaturationValue,
     RandomBrightness, RandomContrast, RandomGamma, OneOf,
     ToFloat, ShiftScaleRotate, GridDistortion, ElasticTransform, JpegCompression, HueSaturationValue,
-    RGBShift, RandomBrightnessContrast, RandomContrast, Blur, MotionBlur, MedianBlur, GaussNoise,CenterCrop,
-    IAAAdditiveGaussianNoise,GaussNoise,Cutout,Rotate, Normalize, Crop, RandomCrop, Resize, RGBShift
+    RGBShift, RandomBrightnessContrast, RandomContrast, Blur, MotionBlur, MedianBlur, GaussNoise, CenterCrop,
+    IAAAdditiveGaussianNoise, GaussNoise, Cutout, Rotate, Normalize, Crop, RandomCrop, Resize, RGBShift
 )
 from PIL import Image
 import cv2
@@ -72,15 +73,38 @@ class RandomErasing(object):
 class RGB2GRAY(object):
     def __init__(self, p=0.5):
         self.probability = p
-    
+
     def __call__(self, image):
         if random.uniform(0, 1) > self.probability:
             return image
         image_gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         # 合并为三通道，以输入网络
         image_gray = cv2.merge([image_gray, image_gray, image_gray])
-        
-        return image_gray        
+
+        return image_gray
+
+
+class ResizeEqualRatio(object):
+    def __init__(self, size, interpolation=Image.BILINEAR):
+        self.size = size
+        self.interpolation = interpolation
+
+    def __call__(self, img):
+        # padding
+        ratio = self.size[0] / self.size[1]
+        w, h = img.size
+        if w / h < ratio:
+            t = int(h * ratio)
+            w_padding = (t - w) // 2
+            img = img.crop((-w_padding, 0, w+w_padding, h))
+        else:
+            t = int(w / ratio)
+            h_padding = (t - h) // 2
+            img = img.crop((0, -h_padding, w, h+h_padding))
+
+        img = img.resize(self.size, self.interpolation)
+
+        return img
 
 
 class DataAugmentation(object):
@@ -94,16 +118,19 @@ class DataAugmentation(object):
         self.full_aug = full_aug
         self.erase_prob = erase_prob
         self.gray_prob = gray_prob
-        
+        self.resize_equal_ratio = ResizeEqualRatio((int(256 * (256 / 224)), int(256 * (256 / 224))))
         self.random_erase = RandomErasing(probability=erase_prob)
         self.rgb2gray = RGB2GRAY(p=gray_prob)
 
     def __call__(self, image):
         """
         Args:
-            image: 传入的图片
-        Returns: 经过数据增强后的图片
+            image: array，传入的图片
+        Returns:
+            image: array，经过数据增强后的图片
         """
+        # image = self.resize_equal_ratio(image)
+        # image = np.asarray(image)
         # 随机擦除
         if self.erase_prob > 0:
             image = self.random_erase(image)
@@ -112,7 +139,7 @@ class DataAugmentation(object):
             image = self.rgb2gray(image)
         if self.full_aug:
             image = self.data_augmentation(image)
-        
+
         return image
 
     def data_augmentation(self, original_image):
@@ -122,32 +149,13 @@ class DataAugmentation(object):
         Return:
             image_aug: 增强后的图片
         """
-        original_height, original_width = original_image.shape[:2]
         augmentations = Compose([
+            # CenterCrop(256, 256),
             HorizontalFlip(p=0.5),
-            VerticalFlip(p=0.3),
-            ShiftScaleRotate(shift_limit=0.07, rotate_limit=15, p=0.5),
-            CenterCrop(p=0.3, height=original_height, width=original_width),
-            # 直方图均衡化
-            CLAHE(p=0.4),
-
-            # 亮度、对比度
-            RandomGamma(gamma_limit=(50, 80), p=0.3),
-            RandomBrightnessContrast(p=0.3),
-            
-            # 模糊
-            OneOf([
-                    MotionBlur(p=0.1),
-                    MedianBlur(blur_limit=3, p=0.1),
-                    Blur(blur_limit=3, p=0.1),
-                ], p=0.3),
-            
-            OneOf([
-                    IAAAdditiveGaussianNoise(),
-                    GaussNoise(),
-                ], p=0.2)
+            VerticalFlip(p=0.25),
+            ShiftScaleRotate(shift_limit=0.07, rotate_limit=10, p=0.4),
         ])
-        
+
         augmented = augmentations(image=original_image)
         image_aug = augmented['image']
 
@@ -156,16 +164,32 @@ class DataAugmentation(object):
 
 if __name__ == "__main__":
     image_path = 'data/huawei_data/train_data'
-    # augment = DataAugmentation(erase_flag=True, full_aug=True, gray=True)
-    augment = DataAugmentation(erase_prob=0.0, gray_prob=0.0)
+    # 只显示特定类别
+    show_classes = [33, 38]  # x for x in range(25, 54)
+    augment = DataAugmentation(erase_prob=0, gray_prob=0)
+    # 得到类标到真实标注的映射
+    with open('data/huawei_data/label_id_name.json', 'r') as f:
+        label_dict = json.load(f)
+
     images_name = [f for f in os.listdir(image_path) if f.endswith('jpg')]
     for image_name in images_name:
+        # 打开txt文件，读取类别，若不在show_classes中，则跳过
+        with open(os.path.join(image_path, image_name).replace('.jpg', '.txt'), 'r', encoding='utf-8-sig') as f:
+            for line in f:
+                txt_name = line.split(', ')[0]
+                label_index = int(line.split(', ')[1])
+        if label_index not in show_classes:
+            continue
+
         plt.figure()
         image = Image.open(os.path.join(image_path, image_name)).convert('RGB')
-        image = np.asarray(image)
         augmented = augment(image=image)
-
+        plt.subplot(1, 2, 1)
+        plt.imshow(image)
+        plt.title('Origin {}:{}'.format(image_name, label_dict[str(label_index)]))
+        plt.subplot(1, 2, 2)
         plt.imshow(augmented)
-        plt.ion()
-        plt.pause(0.2)  #显示秒数
-        plt.close()
+        plt.title('Transform {}:{}'.format(image_name, label_dict[str(label_index)]))
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
+        plt.show()
