@@ -235,7 +235,7 @@ class TrainVal:
 
             # 每一个epoch完毕之后，执行学习率衰减
             if self.lr_scheduler == 'ReduceLR':
-                self.exp_lr_scheduler.step(metrics=val_loss)
+                self.exp_lr_scheduler.step(metrics=val_accuracy)
             else:
                 self.exp_lr_scheduler.step()
             global_step += len(train_loader)

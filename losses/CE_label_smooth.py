@@ -76,10 +76,11 @@ class CrossEntropyLabelSmoothHardMining(nn.Module):
         if self.use_gpu:
             targets = targets.cuda()
         targets = (1 - self.epsilon) * targets + self.epsilon / self.num_classes
-        # mean(0)表示缩减第0维，也就是按列求均值，得到维度为[num_classes]，得到该batch内每一个类别的损失，再求和
-        loss = (- targets * log_probs).mean(1)
+        # 先求各个样本的损失
+        loss = (- targets * log_probs).sum(1)
         selected_number = int(inputs.size(0) * self.ratio)
-        loss = torch.sort(loss, descending=True)[0][:selected_number].mean()
+        # 按照样本取均值
+        loss = torch.sort(loss, descending=True)[0][:selected_number].sum() / selected_number
         return loss
 
 
