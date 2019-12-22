@@ -152,6 +152,7 @@ class ValDataset(Dataset):
         else:
             transform_val_list = [ 
                         T.Resize(self.size, interpolation=3),
+                        T.CenterCrop(self.size),
                         T.ToTensor(),
                         T.Normalize(self.mean, self.std)
                     ]          

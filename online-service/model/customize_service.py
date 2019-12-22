@@ -90,7 +90,7 @@ class ImageClassificationService(PTServingBaseService):
         )
 
         self.transforms = transforms.Compose([
-            transforms.Resize([512, 512]),
+            transforms.Resize([416, 416]),
             transforms.ToTensor(),
             self.normalize
         ])

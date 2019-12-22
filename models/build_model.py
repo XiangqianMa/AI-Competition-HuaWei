@@ -5,6 +5,8 @@ from models.custom_model import CustomModel
 from models.custom_attention_model import CustomLocalAttentionModel
 from utils.radam import RAdam
 from utils.warmup_scheduler import GradualWarmupScheduler
+from utils.torchtools.optim import RangerLars, Ranger
+from utils.torchtools.lr_scheduler import DelayerScheduler, DelayedCosineAnnealingLR
 
 
 class PrepareModel:
@@ -73,6 +75,20 @@ class PrepareModel:
                     {'params': model.module.classifier.parameters(), 'lr': config.lr}                    
                 ], weight_decay=config.weight_decay
             )
+        elif config.optimizer == 'RangerLars':
+            optimizer = RangerLars(
+                [
+                    {'params': base_params, 'lr': 0.1 * config.lr},
+                    {'params': model.module.classifier.parameters(), 'lr': config.lr}                    
+                ], weight_decay=config.weight_decay                
+            )
+        elif config.optimizer == 'Ranger':
+            optimizer = Ranger(
+                [
+                    {'params': base_params, 'lr': 0.1 * config.lr},
+                    {'params': model.module.classifier.parameters(), 'lr': config.lr}                    
+                ], weight_decay=config.weight_decay                 
+            )
 
         return optimizer
 
@@ -85,7 +101,8 @@ class PrepareModel:
             multi_step=None,
             warmup=False,
             multiplier=None,
-            warmup_epoch=None
+            warmup_epoch=None,
+            delay_epoch=None
     ):
         """创建学习率衰减器
         Args:
@@ -114,10 +131,14 @@ class PrepareModel:
         elif lr_scheduler_type == 'ReduceLR':
             # my_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=10)
             my_lr_scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.7, patience=3, verbose=True)
+        
         if warmup:
             if not warmup_epoch or not multiplier:
                 raise ValueError('warup_epoch and multiplier must be specified when warmup is true.')
             my_lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=multiplier, total_epoch=warmup_epoch, after_scheduler=my_lr_scheduler)
+        elif delay_epoch:
+            my_lr_scheduler = DelayerScheduler(optimizer, delay_epoch, my_lr_scheduler)
+
         return my_lr_scheduler
 
     def load_chekpoint(self, model, weight_path):
