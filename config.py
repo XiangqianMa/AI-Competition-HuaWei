@@ -60,8 +60,10 @@ def get_classify_config():
     parser.add_argument('--lr_step_size', type=int, default=20, help='step_size for StepLR scheduler')
     parser.add_argument('--restart_step', type=int, default=80, help='T_max for CosineAnnealingLR scheduler')
     parser.add_argument('--multi_step', type=list, default=[20, 35, 45], help='Milestone of multi_step')
+    parser.add_argument('--delay_epoch', type=int, default=None, help='delay epoch (if you want to keep your lr at the begining.)')
+    
     # 优化器
-    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type: Adam/SGD/RAdam')
+    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type: Adam/SGD/RAdam/RangerLars/Ranger')
     # 损失函数
     parser.add_argument('--loss_name', type=str, default='1.0*SmoothCrossEntropy',
                         help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss/SmoothCrossEntropyHardMining')

@@ -137,6 +137,7 @@ class PrepareModel:
                 raise ValueError('warup_epoch and multiplier must be specified when warmup is true.')
             my_lr_scheduler = GradualWarmupScheduler(optimizer, multiplier=multiplier, total_epoch=warmup_epoch, after_scheduler=my_lr_scheduler)
         elif delay_epoch:
+            print('@ Lr delay epoch: %d' % delay_epoch)
             my_lr_scheduler = DelayerScheduler(optimizer, delay_epoch, my_lr_scheduler)
 
         return my_lr_scheduler

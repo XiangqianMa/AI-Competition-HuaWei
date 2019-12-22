@@ -98,7 +98,8 @@ class TrainVal:
             multi_step=config.multi_step,
             warmup=config.warmup,
             multiplier=config.multiplier,
-            warmup_epoch=config.warmup_epoch
+            warmup_epoch=config.warmup_epoch,
+            delay_epoch=config.delay_epoch
         )
 
         # 加载损失函数
