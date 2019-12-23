@@ -461,7 +461,8 @@ class GetDataloader(object):
 
 def multi_scale_transforms(image_size, images, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), auto_aug=False):
     transform_train_list = [
-                T.Resize(image_size, interpolation=3)
+                T.Resize(image_size, interpolation=3),
+                T.CenterCrop(image_size),
             ]       
     if auto_aug:
         transform_train_list.append(ImageNetPolicy())
