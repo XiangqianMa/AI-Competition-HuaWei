@@ -78,7 +78,8 @@ class TrainDataset(Dataset):
             image = np.asarray(image)
         else:
             transform_train_list = [
-                        T.Resize(self.size, interpolation=3)
+                        T.Resize(self.size, interpolation=3),
+                        T.CenterCrop(self.size),
                     ]
             if self.auto_aug:
                 transform_train_list.append(ImageNetPolicy())
