@@ -4,17 +4,19 @@ import argparse
 def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[416, 416], help='image size')
-    parser.add_argument('--batch_size', type=int, default=24, help='batch size')
-    parser.add_argument('--epoch', type=int, default=30, help='epoch')
+    parser.add_argument('--batch_size', type=int, default=4, help='batch size')
+    parser.add_argument('--epoch', type=int, default=40, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')
+    parser.add_argument('--auto_aug', type=bool, default=True,
+                        help='using auto augment or not.')                        
     parser.add_argument('--erase_prob', type=float, default=0.0,
                         help='probability of random erase when augmentation_flag is True')
     parser.add_argument('--gray_prob', type=float, default=0.3,
                         help='probability of gray when augmentation_flag is True')
     # 数据集划分
-    parser.add_argument('--load_split_from_file', type=str, default='', help='loading dataset split from load_split_from_file， if '' , generate online.' )
+    parser.add_argument('--load_split_from_file', type=str, default='dataset_split.json', help='loading dataset split from load_split_from_file， if '' , generate online.' )
     parser.add_argument('--n_splits', type=int, default=5, help='n_splits_fold')
     parser.add_argument('--val_official', type=bool, default=False, help='only use official data in validate dataset or not.')
     parser.add_argument('--selected_fold', type=list, default=[0], help='which folds for training')
@@ -48,7 +50,7 @@ def get_classify_config():
 
     # model hyper-parameters
     parser.add_argument('--num_classes', type=int, default=54)
-    parser.add_argument('--lr', type=float, default=3e-4, help='init lr')
+    parser.add_argument('--lr', type=float, default=1e-3, help='init lr')
     parser.add_argument('--weight_decay', type=float, default=0.0, help='weight_decay in optimizer')
     parser.add_argument('--warmup', type=bool, default=False, help='use warmup or not')
     parser.add_argument('--multiplier', type=float, default=10, help='when warm up ends, lr will be: lr * multiplier')
@@ -63,14 +65,14 @@ def get_classify_config():
     parser.add_argument('--delay_epoch', type=int, default=None, help='delay epoch (if you want to keep your lr at the begining.)')
     
     # 优化器
-    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type: Adam/SGD/RAdam/RangerLars/Ranger')
+    parser.add_argument('--optimizer', type=str, default='RangerLars', help='optimizer type: Adam/SGD/RAdam/RangerLars/Ranger')
     # 损失函数
     parser.add_argument('--loss_name', type=str, default='1.0*SmoothCrossEntropy',
                         help='Select the loss function, CrossEntropy/SmoothCrossEntropy/FocalLoss/SmoothCrossEntropyHardMining')
 
     # 路径
     parser.add_argument('--save_path', type=str, default='./checkpoints')
-    parser.add_argument('--dataset_root', type=str, default='data/huawei_data/combine_delele_repet')
+    parser.add_argument('--dataset_root', type=str, default='data/huawei_data/combine_delete_repeat')
 
     config = parser.parse_args()
 

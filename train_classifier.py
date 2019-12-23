@@ -41,7 +41,8 @@ class TrainVal:
         self.cut_mix = config.cut_mix
         self.beta = config.beta
         self.cutmix_prob = config.cutmix_prob
-        
+        self.auto_aug = config.auto_aug
+
         # 多尺度
         self.image_size = config.image_size
         self.multi_scale = config.multi_scale
@@ -52,6 +53,8 @@ class TrainVal:
         self.sparsity_scale = config.sparsity_scale
         self.penalty_type = config.penalty_type
         self.selected_labels = config.selected_labels
+        if self.auto_aug:
+            print('@ Using AutoAugment.')
         if self.cut_mix:
             print('@ Using cut mix.')
         if self.multi_scale:
@@ -140,7 +143,7 @@ class TrainVal:
                 if self.multi_scale:
                     if i % self.multi_scale_interval == 0:
                         image_size = random.choice(self.multi_scale_size)
-                    images = multi_scale_transforms(image_size, images)
+                    images = multi_scale_transforms(image_size, images, auto_aug=self.auto_aug)
                 if self.cut_mix:
                     # 使用cut_mix
                     r = np.random.rand(1)
@@ -322,6 +325,7 @@ if __name__ == "__main__":
     val_official = config.val_official
     load_split_from_file = config.load_split_from_file
     selected_labels = config.selected_labels
+    auto_aug = config.auto_aug
     mean = (0.485, 0.456, 0.406)
     std = (0.229, 0.224, 0.225)
     if config.augmentation_flag:
@@ -336,7 +340,8 @@ if __name__ == "__main__":
         only_official=only_official, 
         selected_labels=selected_labels,
         val_official=val_official,
-        load_split_from_file=load_split_from_file
+        load_split_from_file=load_split_from_file,
+        auto_aug=auto_aug
         )
     train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
                                                                        transforms=transforms, multi_scale=multi_scale)
@@ -345,3 +350,4 @@ if __name__ == "__main__":
         if fold_index in config.selected_fold:
             train_val = TrainVal(config, fold_index)
             train_val.train(train_loader, valid_loader)
+    torch.nn.functional.conv1d()

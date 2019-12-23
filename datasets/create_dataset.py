@@ -8,10 +8,11 @@ from matplotlib.font_manager import FontProperties
 from sklearn.model_selection import train_test_split, StratifiedKFold
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as T
+from utils.autoaugment import ImageNetPolicy
 
 
 class TrainDataset(Dataset):
-    def __init__(self, data_root, sample_list, label_list, size, mean, std, transforms=None, only_self=False, only_official=False, multi_scale=False):
+    def __init__(self, data_root, sample_list, label_list, size, mean, std, transforms=None, only_self=False, only_official=False, multi_scale=False, auto_aug=False):
         """
         Args:
             data_root: str, 数据集根目录
@@ -26,6 +27,7 @@ class TrainDataset(Dataset):
         self.data_root = data_root
         self.sample_list = sample_list
         self.label_list = label_list
+        self.auto_aug = auto_aug
         if only_self and only_official:
             raise ValueError('only_self, only_official should not be the same.')
         if only_official:
@@ -76,10 +78,16 @@ class TrainDataset(Dataset):
             image = np.asarray(image)
         else:
             transform_train_list = [
-                        T.Resize(self.size, interpolation=3),
-                        T.ToTensor(),
-                        T.Normalize(self.mean, self.std)
-                    ]          
+                        T.Resize(self.size, interpolation=3)
+                    ]
+            if self.auto_aug:
+                transform_train_list.append(ImageNetPolicy())
+            transform_train_list.extend(
+                [
+                    T.ToTensor(),
+                    T.Normalize(self.mean, self.std)
+                ]
+            )          
             transform_compose = T.Compose(transform_train_list)
             image = transform_compose(image)
         label = torch.tensor(label).long()
@@ -179,7 +187,8 @@ class GetDataloader(object):
         only_official=False, 
         val_official=False, 
         selected_labels=None,
-        load_split_from_file=None
+        load_split_from_file=None,
+        auto_aug=False
         ):
         """
         Args:
@@ -206,6 +215,7 @@ class GetDataloader(object):
         self.only_self = only_self
         self.only_official = only_official
         self.val_official = val_official
+        self.auto_aug=auto_aug
         if self.val_official:
             print('@ Only using official data in validate dataset.')
         self.load_split_from_file = load_split_from_file
@@ -241,7 +251,8 @@ class GetDataloader(object):
                 std=std, 
                 only_self=self.only_self, 
                 only_official=self.only_official, 
-                multi_scale=multi_scale
+                multi_scale=multi_scale,
+                auto_aug=self.auto_aug
                 )
             # 默认不在验证集上进行多尺度
             val_dataset = ValDataset(
@@ -447,12 +458,19 @@ class GetDataloader(object):
         return samples, labels
 
 
-def multi_scale_transforms(image_size, images, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
+def multi_scale_transforms(image_size, images, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), auto_aug=False):
     transform_train_list = [
-                T.Resize(image_size, interpolation=3),
+                T.Resize(image_size, interpolation=3)
+            ]       
+    if auto_aug:
+        transform_train_list.append(ImageNetPolicy())
+    transform_train_list.extend(
+            [
                 T.ToTensor(),
                 T.Normalize(mean, std)
             ]
+    )
+    
     transform_compose = T.Compose(transform_train_list)
     images = images.numpy()
     images_resize = torch.zeros(images.shape[0], 3, image_size[0], image_size[1])
