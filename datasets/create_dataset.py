@@ -78,8 +78,7 @@ class TrainDataset(Dataset):
             image = np.asarray(image)
         else:
             transform_train_list = [
-                        T.Resize(self.size, interpolation=3),
-                        T.CenterCrop(self.size),
+                        T.Resize(self.size, interpolation=3)
                     ]
             if self.auto_aug:
                 transform_train_list.append(ImageNetPolicy())
@@ -161,7 +160,6 @@ class ValDataset(Dataset):
         else:
             transform_val_list = [ 
                         T.Resize(self.size, interpolation=3),
-                        T.CenterCrop(self.size),
                         T.ToTensor(),
                         T.Normalize(self.mean, self.std)
                     ]          
@@ -461,8 +459,7 @@ class GetDataloader(object):
 
 def multi_scale_transforms(image_size, images, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225), auto_aug=False):
     transform_train_list = [
-                T.Resize(image_size, interpolation=3),
-                T.CenterCrop(image_size),
+                T.Resize(image_size, interpolation=3)
             ]       
     if auto_aug:
         transform_train_list.append(ImageNetPolicy())
