@@ -479,7 +479,79 @@ def multi_scale_transforms(image_size, images, mean=(0.485, 0.456, 0.406), std=(
         images_resize[index] = image
 
     return images_resize
+
+
+def get_dataloader_from_folder(
+    data_root, 
+    image_size, 
+    transforms, 
+    mean, 
+    std,
+    batch_size, 
+    only_self=False, 
+    only_official=False, 
+    multi_scale=False, 
+    auto_aug=False
+    ):
+    samples_files = [f for f in os.listdir(data_root) if f.endswith('.jpg')]
+    train_samples_list = []
+    train_labels_list = []
+    val_samples_list = []
+    val_labels_list = []
+    for sample_file in samples_files:
+        label_file = sample_file.replace('.jpg', '.txt')
+        with open(os.path.join(data_root, label_file), 'r') as label_f:
+            for line in label_f.readlines():
+                label = int(line.split(' ')[1])
+        if 'train' in sample_file:
+            train_samples_list.append(sample_file)
+            train_labels_list.append(label)
+        else:
+            val_samples_list.append(sample_file)
+            val_labels_list.append(label)
     
+    train_dataset = TrainDataset(
+        data_root, 
+        train_samples_list, 
+        train_labels_list, 
+        image_size,
+        transforms=transforms, 
+        mean=mean, 
+        std=std, 
+        only_self=False, 
+        only_official=False, 
+        multi_scale=multi_scale,
+        auto_aug=auto_aug
+        )
+    # 默认不在验证集上进行多尺度
+    val_dataset = ValDataset(
+        data_root, 
+        val_samples_list,
+        val_labels_list, 
+        image_size, 
+        mean=mean, 
+        std=std, 
+        only_self=only_self, 
+        only_official=only_official, 
+        multi_scale=multi_scale
+        )
+
+    train_dataloader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        num_workers=8,
+        pin_memory=True,
+        shuffle=True
+    )
+    val_dataloader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        num_workers=8,
+        pin_memory=True,
+        shuffle=False
+    )
+    return train_dataloader, val_dataloader
+
 
 if __name__ == "__main__":
     data_root = 'data/huawei_data/combine_delele_repet'

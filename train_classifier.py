@@ -23,6 +23,7 @@ from datasets.data_augmentation import DataAugmentation
 from utils.cutmix import generate_mixed_sample
 from datasets.create_dataset import multi_scale_transforms
 from utils.sparsity import Sparsity, Regularization
+from datasets.create_dataset import get_dataloader_from_folder
 
 
 class TrainVal:
@@ -363,19 +364,34 @@ if __name__ == "__main__":
         transforms = DataAugmentation(config.erase_prob, full_aug=True, gray_prob=config.gray_prob)
     else:
         transforms = None
-    get_dataloader = GetDataloader(
-        data_root, 
-        folds_split=folds_split, 
-        test_size=test_size, 
-        only_self=only_self, 
-        only_official=only_official, 
-        selected_labels=selected_labels,
-        val_official=val_official,
-        load_split_from_file=load_split_from_file,
-        auto_aug=auto_aug
-        )
-    train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
-                                                                       transforms=transforms, multi_scale=multi_scale)
+    if config.dataset_from_folder:
+        train_dataloaders, val_dataloaders = get_dataloader_from_folder(
+            data_root, 
+            config.image_size, 
+            transforms, 
+            mean, 
+            std, 
+            config.batch_size, 
+            only_official, 
+            only_self, 
+            multi_scale, 
+            config.auto_aug
+            )
+        train_dataloaders, val_dataloaders = [train_dataloaders], [val_dataloaders]
+    else:
+        get_dataloader = GetDataloader(
+            data_root, 
+            folds_split=folds_split, 
+            test_size=test_size, 
+            only_self=only_self, 
+            only_official=only_official, 
+            selected_labels=selected_labels,
+            val_official=val_official,
+            load_split_from_file=load_split_from_file,
+            auto_aug=auto_aug
+            )
+        train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
+                                                                        transforms=transforms, multi_scale=multi_scale)
 
     for fold_index, [train_loader, valid_loader] in enumerate(zip(train_dataloaders, val_dataloaders)):
         if fold_index in config.selected_fold:

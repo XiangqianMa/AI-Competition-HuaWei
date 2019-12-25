@@ -4,8 +4,8 @@ import argparse
 def get_classify_config():
     parser = argparse.ArgumentParser()
     parser.add_argument('--image_size', type=tuple, default=[416, 416], help='image size')
-    parser.add_argument('--batch_size', type=int, default=4, help='batch size')
-    parser.add_argument('--epoch', type=int, default=40, help='epoch')
+    parser.add_argument('--batch_size', type=int, default=24, help='batch size')
+    parser.add_argument('--epoch', type=int, default=30, help='epoch')
 
     parser.add_argument('--augmentation_flag', type=bool, default=True,
                         help='if true, use augmentation method in train set')
@@ -16,7 +16,8 @@ def get_classify_config():
     parser.add_argument('--gray_prob', type=float, default=0.3,
                         help='probability of gray when augmentation_flag is True')
     # 数据集划分
-    parser.add_argument('--load_split_from_file', type=str, default='dataset_split.json', help='loading dataset split from load_split_from_file， if '' , generate online.' )
+    parser.add_argument('--dataset_from_folder', type=bool, default=True, help='loading dataset from folder.')
+    parser.add_argument('--load_split_from_file', type=str, default='', help='loading dataset split from load_split_from_file， if '' , generate online.' )
     parser.add_argument('--n_splits', type=int, default=5, help='n_splits_fold')
     parser.add_argument('--val_official', type=bool, default=False, help='only use official data in validate dataset or not.')
     parser.add_argument('--selected_fold', type=list, default=[0], help='which folds for training')
