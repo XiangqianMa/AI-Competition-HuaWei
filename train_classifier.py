@@ -206,7 +206,7 @@ class TrainVal:
             print('[Finish epoch: {}/{}][Average Acc: {:.4}]'.format(epoch, self.epoch, epoch_acc) + descript)
 
             # 验证模型
-            val_accuracy, val_loss, is_best = self.validation(valid_loader)
+            val_accuracy, val_loss, is_best = self.validation(valid_loader, self.multi_scale)
 
             # 保存参数
             state = {
@@ -249,35 +249,66 @@ class TrainVal:
         print('Copy %s to %s' % (source_path, target_path))
         shutil.copy(source_path, target_path)
 
-    def validation(self, valid_loader):
-        tbar = tqdm.tqdm(valid_loader)
+    def validation(self, valid_loader, multi_scale=False):
         self.model.eval()
         labels_predict_all, labels_all = np.empty(shape=(0,)), np.empty(shape=(0,))
         epoch_loss = 0
         with torch.no_grad():
-            for i, (_, images, labels) in enumerate(tbar):
-                # 网络的前向传播
-                labels_predict = self.solver.forward(images)
-                loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
+            if multi_scale:
+                multi_oa = []
+                for image_size in self.multi_scale_size:
+                    tbar = tqdm.tqdm(valid_loader)
+                    # 对于每一个尺度都计算准确率
+                    for i, (_, images, labels) in enumerate(tbar):
+                        images = multi_scale_transforms(image_size, images, auto_aug=False)
+                        # 网络的前向传播
+                        labels_predict = self.solver.forward(images)
+                        loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
 
-                epoch_loss += loss
+                        epoch_loss += loss
 
-                # 先经过softmax函数，再经过argmax函数
-                labels_predict = F.softmax(labels_predict, dim=1)
-                labels_predict = torch.argmax(labels_predict, dim=1).detach().cpu().numpy()
+                        # 先经过softmax函数，再经过argmax函数
+                        labels_predict = F.softmax(labels_predict, dim=1)
+                        labels_predict = torch.argmax(labels_predict, dim=1).detach().cpu().numpy()
 
-                labels_predict_all = np.concatenate((labels_predict_all, labels_predict))
-                labels_all = np.concatenate((labels_all, labels))
+                        labels_predict_all = np.concatenate((labels_predict_all, labels_predict))
+                        labels_all = np.concatenate((labels_all, labels))
 
-                descript = '[Valid][Loss: {:.4f}]'.format(loss)
-                tbar.set_description(desc=descript)
+                        descript = '[Valid][Loss: {:.4f}]'.format(loss)
+                        tbar.set_description(desc=descript)
 
-            classify_report, my_confusion_matrix, acc_for_each_class, oa, average_accuracy, kappa = \
-                self.classification_metric.get_metric(
-                    labels_all,
-                    labels_predict_all
-                )
+                    classify_report, my_confusion_matrix, acc_for_each_class, oa, average_accuracy, kappa = \
+                        self.classification_metric.get_metric(
+                            labels_all,
+                            labels_predict_all
+                        )
+                    multi_oa.append(oa)
+                oa = np.asarray(multi_oa).mean()
+            else:
+                tbar = tqdm.tqdm(valid_loader)
+                for i, (_, images, labels) in enumerate(tbar):
+                    # 网络的前向传播
+                    labels_predict = self.solver.forward(images)
+                    loss = self.solver.cal_loss(labels_predict, labels, self.criterion)
 
+                    epoch_loss += loss
+
+                    # 先经过softmax函数，再经过argmax函数
+                    labels_predict = F.softmax(labels_predict, dim=1)
+                    labels_predict = torch.argmax(labels_predict, dim=1).detach().cpu().numpy()
+
+                    labels_predict_all = np.concatenate((labels_predict_all, labels_predict))
+                    labels_all = np.concatenate((labels_all, labels))
+
+                    descript = '[Valid][Loss: {:.4f}]'.format(loss)
+                    tbar.set_description(desc=descript)
+
+                classify_report, my_confusion_matrix, acc_for_each_class, oa, average_accuracy, kappa = \
+                    self.classification_metric.get_metric(
+                        labels_all,
+                        labels_predict_all
+                    )
+                            
             if oa > self.max_accuracy_valid:
                 is_best = True
                 self.max_accuracy_valid = oa
@@ -350,4 +381,3 @@ if __name__ == "__main__":
         if fold_index in config.selected_fold:
             train_val = TrainVal(config, fold_index)
             train_val.train(train_loader, valid_loader)
-    torch.nn.functional.conv1d()

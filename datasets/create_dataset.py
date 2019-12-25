@@ -157,6 +157,7 @@ class ValDataset(Dataset):
         
         if self.multi_scale:
             image = T.Resize(self.size, interpolation=3)(image)
+            image = np.asarray(image)
         else:
             transform_val_list = [ 
                         T.Resize(self.size, interpolation=3),
@@ -263,7 +264,7 @@ class GetDataloader(object):
                 std=std, 
                 only_self=self.only_self, 
                 only_official=self.only_official, 
-                multi_scale=False
+                multi_scale=multi_scale
                 )
 
             train_dataloader = DataLoader(

@@ -1,8 +1,8 @@
 import json
 import os
 
-delete_files_path = '/media/mxq/data/competition/HuaWei/delete_bak'
-dataset_split_file = '/media/mxq/project/Projects/competition/HuaWei/AI-Competition-HuaWei/dataset_split.json'
+delete_files_path = 'data/huawei_data/delete_bak'
+dataset_split_file = 'dataset_split.json'
 
 delete_files = [f for f in os.listdir(delete_files_path) if f.endswith('jpg')]
 with open(dataset_split_file, 'r') as f:
