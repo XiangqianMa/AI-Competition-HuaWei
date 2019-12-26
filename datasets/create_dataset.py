@@ -223,7 +223,7 @@ class GetDataloader(object):
             if not test_size:
                 raise ValueError('You must specified test_size when folds_split equal to 1.')
     
-    def get_dataloader(self, batch_size, image_size, mean, std, transforms=None, multi_scale=False):
+    def get_dataloader(self, batch_size, image_size, mean, std, transforms=None, multi_scale=False, val_multi_scale=False):
         """得到数据加载器
         Args:
             batch_size: int, 批量大小
@@ -264,7 +264,7 @@ class GetDataloader(object):
                 std=std, 
                 only_self=self.only_self, 
                 only_official=self.only_official, 
-                multi_scale=multi_scale
+                multi_scale=val_multi_scale
                 )
 
             train_dataloader = DataLoader(
@@ -491,6 +491,7 @@ def get_dataloader_from_folder(
     only_self=False, 
     only_official=False, 
     multi_scale=False, 
+    val_multi_scale=False,
     auto_aug=False
     ):
     samples_files = [f for f in os.listdir(data_root) if f.endswith('.jpg')]
@@ -533,7 +534,7 @@ def get_dataloader_from_folder(
         std=std, 
         only_self=only_self, 
         only_official=only_official, 
-        multi_scale=multi_scale
+        multi_scale=val_multi_scale
         )
 
     train_dataloader = DataLoader(

@@ -47,6 +47,7 @@ class TrainVal:
         # 多尺度
         self.image_size = config.image_size
         self.multi_scale = config.multi_scale
+        self.val_multi_scale = config.val_multi_scale
         self.multi_scale_size = config.multi_scale_size
         self.multi_scale_interval = config.multi_scale_interval
         # 稀疏训练
@@ -207,7 +208,7 @@ class TrainVal:
             print('[Finish epoch: {}/{}][Average Acc: {:.4}]'.format(epoch, self.epoch, epoch_acc) + descript)
 
             # 验证模型
-            val_accuracy, val_loss, is_best = self.validation(valid_loader, self.multi_scale)
+            val_accuracy, val_loss, is_best = self.validation(valid_loader, self.val_multi_scale)
 
             # 保存参数
             state = {

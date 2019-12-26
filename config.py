@@ -34,6 +34,7 @@ def get_classify_config():
     parser.add_argument('--cutmix_prob', type=float, default=0.5, help='cutmix probof cut mix.')
     # 多尺度
     parser.add_argument('--multi_scale', type=bool, default=True, help='use multi scale training or not.')
+    parser.add_argument('--val_multi_scale', type=bool, default=True, help='use multi scale validate or not.')
     parser.add_argument('--multi_scale_size', type=list, default=[[256, 256], [288, 288], [320, 320], [352, 352], [384, 384], [416, 416]], help='multi scale choice.')
     parser.add_argument('--multi_scale_interval', type=int, default=10, help='make a scale choice every [] iterations.')
     # 稀疏度训练
