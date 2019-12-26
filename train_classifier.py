@@ -69,7 +69,8 @@ class TrainVal:
             model_type=config.model_type,
             classes_num=self.num_classes,
             drop_rate=config.drop_rate,
-            pretrained=True
+            pretrained=True,
+            bn_to_gn=config.bn_to_gn
         )
         if config.weight_path:
             self.model = prepare_model.load_chekpoint(self.model, config.weight_path)
@@ -199,7 +200,7 @@ class TrainVal:
             self.writer.add_scalar('Lr', self.optimizer.param_groups[0]['lr'], epoch)
             if self.l1_regular:
                 l1_regular_loss_epoch = l1_regular_loss / len(train_loader)
-                loss_with_l1_regular_epoch =  loss_with_l1_regular / len(train_loader)
+                loss_with_l1_regular_epoch = loss_with_l1_regular / len(train_loader)
                 self.writer.add_scalar('TrainL1RegularLoss', l1_regular_loss_epoch, epoch)
                 self.writer.add_scalar('TrainLossWithL1Regular', loss_with_l1_regular_epoch, epoch)
             descript = self.criterion.record_loss_epoch(len(train_loader), self.writer.add_scalar, epoch)
@@ -355,6 +356,7 @@ if __name__ == "__main__":
     only_self = config.only_self
     only_official = config.only_official
     multi_scale = config.multi_scale
+    val_multi_scale = config.val_multi_scale
     val_official = config.val_official
     load_split_from_file = config.load_split_from_file
     selected_labels = config.selected_labels
@@ -392,7 +394,7 @@ if __name__ == "__main__":
             auto_aug=auto_aug
             )
         train_dataloaders, val_dataloaders = get_dataloader.get_dataloader(config.batch_size, config.image_size, mean, std,
-                                                                        transforms=transforms, multi_scale=multi_scale)
+                                                                        transforms=transforms, multi_scale=multi_scale, val_multi_scale=val_multi_scale)
 
     for fold_index, [train_loader, valid_loader] in enumerate(zip(train_dataloaders, val_dataloaders)):
         if fold_index in config.selected_fold:
