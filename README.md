@@ -1,3 +1,4 @@
+中文|[EN](https://github.com/zdaiot/AI-Competition-HuaWei)
 # 华为云人工智能创新应用大赛
 
 ![](README/image)
