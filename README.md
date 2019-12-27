@@ -218,7 +218,7 @@ from model import xxx
 * FocalLoss
 * SmoothCrossEntropyHardMining
 
-可以使用表达式对上述损失函数进行自由加权组合，例如`0.7\*SmoothCrossEntropy+0.3\*CrossEntropy`。
+可以使用表达式对上述损失函数进行自由加权组合，例如`0.7*SmoothCrossEntropy+0.3*CrossEntropy`。
 
 > 注意：SmoothCrossEntropyHardMining为个人依据自身理解编写，如有错误欢迎指出。
 
