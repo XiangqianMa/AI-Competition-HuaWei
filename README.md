@@ -70,7 +70,7 @@ cd AI-Competition-HuaWei
 
   1. 图片和标注文件存放在同一文件夹下，如下图所示:
 
-     ![](README-Template/Screenshot from 2019-12-27 10-33-22.png)
+     <div align=center><img src="README-Template/dataset.png" style="zoom:67%;" /></div>
 
   2. 标注文件为`txt`格式，其内容如下：
   
@@ -115,14 +115,12 @@ python demo.py
 
 测试完成后，**预测错误的样本**将被存放到`data/demo_data/results`文件夹下。测试示例如下：
 
-<img src="README-Template/img_2625.jpg" style="zoom:67%;" />
-
+<div align=center><img src="README-Template/img_2625.jpg" style="zoom:67%;" /></div>
 #### 线上部署
 
 如需线上部署，请参考`online-service`文件夹。请将你的依赖库放在该文件夹下的`model`文件夹中，`model`的组织形式如下：
 
-![](README-Template/model结构.png)
-
+<div align=center><img src="README-Template/model结构.png" style="zoom:80%;" /></div>
 注意，如果需要在`customize_service.py`导入自定义的模块，请使用如下导入模式：
 
 ```python
