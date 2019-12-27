@@ -159,10 +159,10 @@ def compute_labels_thresh(labels_scores, thresh_max=0.95, thresh_min=0.85):
 
 if __name__ == "__main__":
     config = get_classify_config()
-    weight_path = 'checkpoints/se_resnext101_32x4d/log-2019-12-17T18-24-58/model_best.pth'
-    label_json_path = 'data/huawei_data/label_id_name.json'
-    samples_root = '/media/mxq/data/competition/HuaWei/google'
-    save_path = '/media/mxq/data/competition/HuaWei/google_伪标签'
+    weight_path = 'model_best.pth'
+    label_json_path = 'label_id_name.json'
+    samples_root = ''
+    save_path = ''
     labels_score_file = 'checkpoints/se_resnext101_32x4d/log-2019-12-17T18-24-58/classes_acc.json'
 
     thresh_max = 0.90
