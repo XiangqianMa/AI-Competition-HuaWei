@@ -1,6 +1,6 @@
 # 华为云人工智能创新应用大赛
 
-![](README-Template/image)
+![](README/image)
 
 ## 简介
 
@@ -70,7 +70,7 @@ cd AI-Competition-HuaWei
 
   1. 图片和标注文件存放在同一文件夹下，如下图所示:
 
-     <div align=center><img src="README-Template/dataset.png" style="zoom:67%;" /></div>
+     <div align=center><img src="README/dataset.png" style="zoom:50%;" /></div>
 
   2. 标注文件为`txt`格式，其内容如下：
   
@@ -115,12 +115,16 @@ python demo.py
 
 测试完成后，**预测错误的样本**将被存放到`data/demo_data/results`文件夹下。测试示例如下：
 
-<div align=center><img src="README-Template/img_2625.jpg" style="zoom:67%;" /></div>
+<div align=center><img src="README/img_2625.jpg" style="zoom:67%;" /></div>
+
+
+
 #### 线上部署
 
 如需线上部署，请参考`online-service`文件夹。请将你的依赖库放在该文件夹下的`model`文件夹中，`model`的组织形式如下：
 
-<div align=center><img src="README-Template/model结构.png" style="zoom:80%;" /></div>
+<div align=center><img src="README/model结构.png" style="zoom:80%;" /></div>
+
 注意，如果需要在`customize_service.py`导入自定义的模块，请使用如下导入模式：
 
 ```python
@@ -216,7 +220,7 @@ from model import xxx
 
 可以使用表达式对上述损失函数进行自由加权组合，例如`0.7\*SmoothCrossEntropy+0.3\*CrossEntropy`。
 
-> **注意：**SmoothCrossEntropyHardMining为个人依据自身理解编写，如有错误欢迎指出。
+> 注意：SmoothCrossEntropyHardMining为个人依据自身理解编写，如有错误欢迎指出。
 
 #### 数据集划分
 
